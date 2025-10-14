@@ -1,0 +1,140 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
+
+class PasswordResetController extends Controller
+{
+    public function showForgotPasswordForm()
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetCode(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email', 'exists:users,email']
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+        
+        // Generate 6-digit code
+        $resetCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        // Store code in cache for 15 minutes
+        Cache::put('password_reset_' . $user->email, $resetCode, 900);
+        
+        // Send password reset code email
+        $this->sendResetCodeEmail($user, $resetCode);
+
+        return redirect()->route('password.reset.form');
+    }
+
+    public function showResetForm()
+    {
+        return view('auth.reset-password-code');
+    }
+
+    public function verifyResetCode(Request $request)
+    {
+        $request->validate([
+            'code' => ['required', 'string', 'size:6']
+        ]);
+
+        // Find user by checking all users for the reset code
+        $users = User::all();
+        $user = null;
+        
+        foreach ($users as $u) {
+            $cachedCode = Cache::get('password_reset_' . $u->email);
+            if ($cachedCode && $cachedCode === $request->code) {
+                $user = $u;
+                break;
+            }
+        }
+
+        if (!$user) {
+            return redirect()->back()->with('error', 'Invalid or expired reset code.');
+        }
+
+        // Store the reset code in session for the next step
+        $request->session()->put('reset_code', $request->code);
+        $request->session()->put('reset_user_email', $user->email);
+
+        \Log::info('Reset code verified for user: ' . $user->email);
+
+        return redirect()->route('password.create.form');
+    }
+
+    public function showCreatePasswordForm()
+    {
+        // Check if reset code exists in session
+        if (!session('reset_code') || !session('reset_user_email')) {
+            return redirect()->route('password.reset.form')->with('error', 'Please verify your reset code first.');
+        }
+
+        return view('auth.create-new-password');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        // Get user data from session
+        $userEmail = session('reset_user_email');
+        $resetCode = session('reset_code');
+
+        if (!$userEmail || !$resetCode) {
+            return redirect()->route('password.reset.form')->with('error', 'Session expired. Please verify your code again.');
+        }
+
+        $request->validate([
+            'password' => [
+                'required', 
+                'confirmed', 
+                'min:6'
+            ]
+        ]);
+
+        $user = User::where('email', $userEmail)->first();
+        
+        if (!$user) {
+            return redirect()->route('password.reset.form')->with('error', 'User not found.');
+        }
+
+        // Verify the reset code is still valid
+        $cachedCode = Cache::get('password_reset_' . $user->email);
+        if (!$cachedCode || $cachedCode !== $resetCode) {
+            return redirect()->route('password.reset.form')->with('error', 'Reset code has expired. Please request a new one.');
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->password)
+        ]);
+
+        // Clear the reset code and session data
+        Cache::forget('password_reset_' . $user->email);
+        $request->session()->forget(['reset_code', 'reset_user_email']);
+
+        \Log::info('Password reset successful for user: ' . $user->email);
+
+        return redirect()->route('login')->with('success', 'Password reset successfully! You can now log in.');
+    }
+
+    private function sendResetCodeEmail($user, $code)
+    {
+        Mail::send('emails.password-reset-code', [
+            'user' => $user,
+            'code' => $code
+        ], function ($message) use ($user) {
+            $message->to($user->email, $user->name)
+                    ->subject('Password Reset Code');
+        });
+    }
+}
