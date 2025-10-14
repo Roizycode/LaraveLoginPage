@@ -4,22 +4,31 @@ services:
     env: php
     plan: free
     buildCommand: |
-      # Install Heroku PHP buildpack
-      curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+      # Install Composer dependencies
       composer install --no-dev --optimize-autoloader
+      
+      # Install Node dependencies & build frontend (Vite)
       npm ci
       npm run build
+
+      # Laravel setup commands
       php artisan key:generate --force
-      php artisan migrate --force
+      php artisan migrate --force || true
       php artisan config:cache
       php artisan route:cache
       php artisan view:cache
-    startCommand: vendor/bin/heroku-php-apache2 public/
+
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: false
+      - key: APP_KEY
+        value: base64:CL23lWmW5r/0ONuyDwN6fAaiLYDpiqWfKhYqQ6i1big=
+      - key: APP_URL
+        value: https://laravel-login-app.onrender.com
       - key: DB_CONNECTION
         value: sqlite
       - key: DB_DATABASE
