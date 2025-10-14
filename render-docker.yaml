@@ -3,10 +3,7 @@ services:
     name: laravel-login-app
     env: docker
     plan: free
-    # Use Docker image from GitHub Container Registry instead of building from source
-    dockerImage: ghcr.io/YOUR_GITHUB_USERNAME/laravel-login-app:latest
-    # Remove dockerfilePath since we're using a pre-built image
-    # dockerfilePath: ./Dockerfile
+    dockerImage: ghcr.io/YOUR_USERNAME/laravel-login-app:latest
 
     envVars:
       - key: APP_ENV
