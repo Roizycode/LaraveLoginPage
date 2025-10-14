@@ -1,28 +1,12 @@
 {
   "version": 2,
-  "builds": [
+  "buildCommand": "npm run build",
+  "outputDirectory": "public/build",
+  "framework": null,
+  "rewrites": [
     {
-      "src": "public/index.php",
-      "use": "@vercel/php"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "public/index.php"
-    }
-  ],
-  "functions": {
-    "public/index.php": {
-      "runtime": "php@8.2"
-    }
-  },
-  "env": {
-    "APP_ENV": "production",
-    "APP_DEBUG": "false",
-    "APP_KEY": "base64:your-app-key-here",
-    "DB_CONNECTION": "sqlite",
-    "DB_DATABASE": "/tmp/database.sqlite"
-  },
-  "buildCommand": "composer install --no-dev --optimize-autoloader && npm ci && npm run build"
+  ]
 }
