@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Start script for Laravel application
+# Simple startup script for Laravel application
 
 echo "Starting Laravel application..."
 
@@ -19,28 +19,12 @@ fi
 # Change to Laravel directory
 cd /var/www/html
 
-# Clear all caches first
-echo "Clearing Laravel caches..."
-php artisan config:clear || true
-php artisan cache:clear || true
-php artisan route:clear || true
-php artisan view:clear || true
+# Simple Laravel setup
+echo "Setting up Laravel..."
+php artisan key:generate --force
+php artisan migrate --force
 
-# Generate application key if not set
-echo "Checking application key..."
-php artisan key:generate --force || true
-
-# Run database migrations
-echo "Running database migrations..."
-php artisan migrate --force || true
-
-# Cache for production
-echo "Caching for production..."
-php artisan config:cache || true
-php artisan route:cache || true
-php artisan view:cache || true
-
-echo "Laravel initialization complete. Starting Apache..."
+echo "Laravel setup complete. Starting Apache..."
 
 # Start Apache
 exec apache2-foreground

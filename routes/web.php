@@ -22,6 +22,11 @@ Route::get('/debug', function () {
     ]);
 });
 
+// Health check route
+Route::get('/health', function () {
+    return response()->json(['status' => 'OK', 'time' => now()]);
+});
+
 // Fallback route - redirect any undefined route to login
 Route::fallback(function () {
     return redirect('/login');
