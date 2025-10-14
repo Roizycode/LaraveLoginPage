@@ -11,6 +11,11 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
+// Simple test route
+Route::get('/test', function () {
+    return 'Laravel is working! Time: ' . now();
+});
+
 // Debug route to check if Laravel is working
 Route::get('/debug', function () {
     return response()->json([
@@ -24,7 +29,28 @@ Route::get('/debug', function () {
 
 // Health check route
 Route::get('/health', function () {
-    return response()->json(['status' => 'OK', 'time' => now()]);
+    try {
+        $checks = [
+            'status' => 'OK',
+            'time' => now(),
+            'app_name' => config('app.name'),
+            'app_env' => config('app.env'),
+            'database' => config('database.default'),
+            'storage_writable' => is_writable(storage_path()),
+            'bootstrap_cache_writable' => is_writable(base_path('bootstrap/cache')),
+            'database_exists' => file_exists(database_path('database.sqlite')),
+            'php_version' => PHP_VERSION,
+            'laravel_version' => app()->version()
+        ];
+        
+        return response()->json($checks);
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'ERROR',
+            'error' => $e->getMessage(),
+            'time' => now()
+        ], 500);
+    }
 });
 
 // Fallback route - redirect any undefined route to login
