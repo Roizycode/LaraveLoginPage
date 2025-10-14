@@ -4,6 +4,8 @@ services:
     env: php
     plan: free
     buildCommand: |
+      # Install Heroku PHP buildpack
+      curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
       composer install --no-dev --optimize-autoloader
       npm ci
       npm run build
@@ -12,7 +14,7 @@ services:
       php artisan config:cache
       php artisan route:cache
       php artisan view:cache
-    startCommand: /usr/bin/php -S 0.0.0.0:$PORT -t public/
+    startCommand: vendor/bin/heroku-php-apache2 public/
     envVars:
       - key: APP_ENV
         value: production
