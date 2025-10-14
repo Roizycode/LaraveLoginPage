@@ -26,3 +26,5 @@ services:
         value: /opt/render/project/src/database/database.sqlite
       - key: LOG_CHANNEL
         value: stderr
+      # Note: APP_KEY should be set in Render dashboard, not here
+      # Generate with: php artisan key:generate --show
