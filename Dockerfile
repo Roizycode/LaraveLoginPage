@@ -43,12 +43,35 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
+# Create .env file for production
+RUN echo "APP_NAME=Laravel" > /var/www/html/.env \
+    && echo "APP_ENV=production" >> /var/www/html/.env \
+    && echo "APP_KEY=base64:CL23lWmW5r/0ONuyDwN6fAaiLYDpiqWfKhYqQ6i1big=" >> /var/www/html/.env \
+    && echo "APP_DEBUG=false" >> /var/www/html/.env \
+    && echo "APP_URL=https://laravel-login-app.onrender.com" >> /var/www/html/.env \
+    && echo "DB_CONNECTION=sqlite" >> /var/www/html/.env \
+    && echo "DB_DATABASE=/var/www/html/database/database.sqlite" >> /var/www/html/.env \
+    && echo "LOG_CHANNEL=stderr" >> /var/www/html/.env
+
+# Create SQLite database file
+RUN touch /var/www/html/database/database.sqlite \
+    && chown www-data:www-data /var/www/html/database/database.sqlite
+
+# Run Laravel migrations and optimizations
+RUN php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
+
 # Configure Apache
 RUN a2enmod rewrite
 COPY .docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 
+# Copy and make startup script executable
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
 # Expose port
 EXPOSE 80
 
-# Start Apache
-CMD ["apache2-foreground"]
+# Start Apache with Laravel initialization
+CMD ["/usr/local/bin/start.sh"]
