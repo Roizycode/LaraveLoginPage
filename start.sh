@@ -10,8 +10,17 @@ chmod -R 755 /var/www/html/storage
 chmod -R 755 /var/www/html/bootstrap/cache
 
 # Create SQLite database if it doesn't exist
-if [ ! -f /var/www/html/database/database.sqlite ]; then
+if [ ! -f /opt/render/project/src/database/database.sqlite ]; then
     echo "Creating SQLite database..."
+    mkdir -p /opt/render/project/src/database
+    touch /opt/render/project/src/database/database.sqlite
+    chown www-data:www-data /opt/render/project/src/database/database.sqlite
+fi
+
+# Also create local database for compatibility
+if [ ! -f /var/www/html/database/database.sqlite ]; then
+    echo "Creating local SQLite database..."
+    mkdir -p /var/www/html/database
     touch /var/www/html/database/database.sqlite
     chown www-data:www-data /var/www/html/database/database.sqlite
 fi
