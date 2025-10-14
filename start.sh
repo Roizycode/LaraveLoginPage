@@ -39,7 +39,7 @@ php artisan migrate --force --no-interaction
 
 # Verify sessions table exists
 echo "Verifying sessions table..."
-php artisan tinker --execute="echo 'Sessions table exists: ' . (Schema::hasTable('sessions') ? 'YES' : 'NO');" || true
+php artisan tinker --execute="use Illuminate\Support\Facades\Schema; echo 'Sessions table exists: ' . (Schema::hasTable('sessions') ? 'YES' : 'NO');" || true
 
 echo "Laravel setup complete. Starting Apache..."
 

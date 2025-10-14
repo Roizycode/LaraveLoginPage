@@ -3,7 +3,7 @@ services:
     name: laravel-login-app
     env: docker
     plan: free
-    dockerImage: ghcr.io/YOUR_USERNAME/laravel-login-app:latest
+    dockerImage: ghcr.io/Roizycode/Laravite-Loginpage:latest
 
     envVars:
       - key: APP_ENV
@@ -13,7 +13,7 @@ services:
       - key: APP_KEY
         value: base64:CL23lWmW5r/0ONuyDwN6fAaiLYDpiqWfKhYqQ6i1big=
       - key: APP_URL
-        value: https://laravel-login-app.onrender.com
+        value: https://mylaravel-loginpage.onrender.com
       - key: DB_CONNECTION
         value: sqlite
       - key: DB_DATABASE
