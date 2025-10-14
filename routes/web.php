@@ -11,6 +11,17 @@ Route::get('/', function () {
     return redirect('/login');
 });
 
+// Debug route to check if Laravel is working
+Route::get('/debug', function () {
+    return response()->json([
+        'status' => 'Laravel is working!',
+        'app_name' => config('app.name'),
+        'app_env' => config('app.env'),
+        'database' => config('database.default'),
+        'time' => now()
+    ]);
+});
+
 // Fallback route - redirect any undefined route to login
 Route::fallback(function () {
     return redirect('/login');

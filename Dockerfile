@@ -57,10 +57,7 @@ RUN echo "APP_NAME=Laravel" > /var/www/html/.env \
 RUN touch /var/www/html/database/database.sqlite \
     && chown www-data:www-data /var/www/html/database/database.sqlite
 
-# Run Laravel migrations and optimizations
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+# Note: Laravel optimizations will be done in startup script
 
 # Configure Apache
 RUN a2enmod rewrite
