@@ -4,7 +4,7 @@ services:
     env: docker
     plan: free
     # Use Docker image from GitHub Container Registry instead of building from source
-    dockerImage: ghcr.io/YOUR_GITHUB_USERNAME/laravel-login-app:latest
+    dockerImage: ghcr.io/Roizycode/Laravite-Loginpage:latest
     # Remove dockerfilePath since we're using a pre-built image
     # dockerfilePath: ./Dockerfile
 
