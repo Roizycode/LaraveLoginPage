@@ -12,7 +12,7 @@ services:
       php artisan config:cache
       php artisan route:cache
       php artisan view:cache
-    startCommand: php -S 0.0.0.0:$PORT -t public/
+    startCommand: /usr/bin/php -S 0.0.0.0:$PORT -t public/
     envVars:
       - key: APP_ENV
         value: production
