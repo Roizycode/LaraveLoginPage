@@ -4,8 +4,6 @@ services:
     env: php
     plan: free
     buildCommand: |
-      # Install Heroku PHP buildpack
-      curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
       composer install --no-dev --optimize-autoloader
       npm ci
       npm run build
@@ -20,13 +18,9 @@ services:
         value: production
       - key: APP_DEBUG
         value: false
-      - key: APP_URL
-        value: https://laravel-login-app.onrender.com
       - key: DB_CONNECTION
         value: sqlite
       - key: DB_DATABASE
         value: /opt/render/project/src/database/database.sqlite
       - key: LOG_CHANNEL
         value: stderr
-      # Note: APP_KEY should be set in Render dashboard, not here
-      # Generate with: php artisan key:generate --show
