@@ -15,6 +15,15 @@
             box-sizing: border-box;
         }
 
+        /* Prevent layout shifts and improve performance */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body, html {
+            overflow-x: hidden;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #000000;
@@ -22,12 +31,14 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            background-attachment: fixed;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow-x: auto;
             position: relative;
+            will-change: auto;
         }
 
         body::before {
@@ -161,11 +172,14 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s ease, transform 0.1s ease;
             margin-bottom: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: background-color;
         }
 
         .continue-btn:hover {
@@ -212,12 +226,15 @@
             font-size: 16px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s ease, transform 0.1s ease;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: background-color;
         }
 
         .social-btn:hover {

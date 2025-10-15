@@ -76,9 +76,12 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.2s ease, transform 0.1s ease;
             text-decoration: none;
             display: inline-block;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: background-color;
         }
 
         .logout-btn:hover {
