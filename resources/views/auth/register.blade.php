@@ -40,7 +40,7 @@
             background: #000000;
             background-image: url('https://i.pinimg.com/originals/19/6a/d9/196ad9d3122098b297d7b99ce9ff209f.gif');
             background-size: cover;
-            background-position: center;
+            background-position: center center;
             background-repeat: no-repeat;
             background-attachment: fixed;
             min-height: 100vh;
@@ -51,8 +51,6 @@
             position: relative;
             will-change: auto;
             padding: 20px;
-            /* Prevent zoom on input focus */
-            touch-action: manipulation;
         }
 
         body::before {
@@ -105,22 +103,7 @@
             height: 100%;
         }
 
-        /* Main Container */
-        .auth-container {
-            position: relative;
-            z-index: 10;
-            background: #1f1f1f;
-            border: 1px solid #333333;
-            border-radius: 16px;
-            padding: 48px 40px;
-            width: 100%;
-            max-width: 450px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            backface-visibility: hidden;
-            will-change: auto;
-            contain: layout style paint;
-            margin: 0 auto;
-        }
+        /* Main Container - moved to bottom to avoid conflicts */
 
         .auth-title {
             font-size: 32px;
@@ -201,6 +184,28 @@
 
         .password-toggle:hover {
             color: #FFFFFF;
+        }
+
+        .password-toggle svg {
+            width: 20px;
+            height: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .password-toggle .eye-open {
+            display: block;
+        }
+
+        .password-toggle .eye-closed {
+            display: none;
+        }
+
+        .password-toggle.show-password .eye-open {
+            display: none;
+        }
+
+        .password-toggle.show-password .eye-closed {
+            display: block;
         }
 
         .continue-btn {
@@ -364,10 +369,19 @@
 
         /* Ensure container never moves */
         .auth-container {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) translateZ(0) !important;
+            position: relative;
+            z-index: 10;
+            background: #1f1f1f;
+            border: 1px solid #333333;
+            border-radius: 16px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backface-visibility: hidden;
+            will-change: auto;
+            contain: layout style paint;
+            margin: 0 auto;
         }
 
         /* Prevent background zoom/shift on input focus */
@@ -428,6 +442,7 @@
                 <label class="form-label">Email</label>
                 <input type="email" name="email" class="form-input" placeholder="Your email address" value="{{ old('email') }}" required>
             </div>
+
 
             <button type="submit" class="continue-btn" id="registerBtn">
                 <span class="loading" id="loading"></span>
@@ -492,6 +507,7 @@
                 toast.addEventListener('mouseleave', Swal.resumeTimer)
             }
         });
+
 
         // Form submission with loading state
         document.getElementById('registerForm').addEventListener('submit', function(e) {
