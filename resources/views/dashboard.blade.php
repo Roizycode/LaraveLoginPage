@@ -24,6 +24,10 @@
         }
 
         .dashboard-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateZ(0);
             background: #1f1f1f;
             border: 1px solid #333333;
             border-radius: 16px;
@@ -32,8 +36,6 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             max-width: 500px;
             width: 100%;
-            margin: 20px;
-            transform: translateZ(0);
             backface-visibility: hidden;
             will-change: auto;
             contain: layout style paint;
@@ -108,6 +110,23 @@
             color: #FFFFFF;
             font-size: 12px;
             margin: 0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 32px 24px;
+                max-width: calc(100vw - 20px);
+                width: calc(100vw - 20px);
+            }
+        }
+
+        /* Ensure container never moves */
+        .dashboard-container {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) translateZ(0) !important;
         }
     </style>
 </head>

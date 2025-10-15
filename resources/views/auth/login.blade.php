@@ -85,7 +85,10 @@
 
         /* Main Container */
         .auth-container {
-            position: relative;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) translateZ(0);
             z-index: 10;
             background: #1f1f1f;
             border: 1px solid #333333;
@@ -94,8 +97,6 @@
             width: 100%;
             max-width: 450px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            margin: 20px;
-            transform: translateZ(0);
             backface-visibility: hidden;
             will-change: auto;
             contain: layout style paint;
@@ -323,14 +324,23 @@
         /* Responsive Design */
         @media (max-width: 480px) {
             .auth-container {
-                margin: 10px;
                 padding: 32px 24px;
+                max-width: calc(100vw - 20px);
+                width: calc(100vw - 20px);
             }
             
             .auth-title {
                 font-size: 28px;
                 margin-bottom: 40px;
             }
+        }
+
+        /* Ensure container never moves */
+        .auth-container {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) translateZ(0) !important;
         }
 
         /* Loading Animation */
