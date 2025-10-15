@@ -33,6 +33,10 @@
             max-width: 500px;
             width: 100%;
             margin: 20px;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: auto;
+            contain: layout style paint;
         }
 
         .welcome-title {
@@ -86,6 +90,11 @@
 
         .logout-btn:hover {
             background: #7C3AED;
+            transform: translateZ(0) scale(1.05);
+        }
+
+        .logout-btn:active {
+            transform: translateZ(0) scale(0.95);
         }
 
         .developer-credit {

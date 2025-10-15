@@ -24,6 +24,17 @@
             overflow-x: hidden;
         }
 
+        /* Prevent container shaking */
+        .auth-container * {
+            transform-origin: center;
+        }
+
+        /* Smooth button interactions without affecting container */
+        .continue-btn, .social-btn {
+            transform-origin: center;
+            transition: background-color 0.2s ease, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #000000;
@@ -84,6 +95,10 @@
             max-width: 450px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             margin: 20px;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: auto;
+            contain: layout style paint;
         }
 
         .auth-title {
@@ -184,6 +199,11 @@
 
         .continue-btn:hover {
             background: #F3F4F6;
+            transform: translateZ(0) scale(1.02);
+        }
+
+        .continue-btn:active {
+            transform: translateZ(0) scale(0.98);
         }
 
         .divider {
@@ -239,6 +259,11 @@
 
         .social-btn:hover {
             background: #333333;
+            transform: translateZ(0) scale(1.01);
+        }
+
+        .social-btn:active {
+            transform: translateZ(0) scale(0.99);
         }
 
         .social-icon {
