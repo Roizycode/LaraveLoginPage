@@ -15,9 +15,8 @@ class RefreshCsrfToken
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Refresh CSRF token if it's about to expire
-        if ($request->session()->has('_token')) {
-            $token = $request->session()->get('_token');
+        // Always regenerate CSRF token for better security
+        if ($request->isMethod('get')) {
             $request->session()->regenerateToken();
         }
 
@@ -25,6 +24,11 @@ class RefreshCsrfToken
 
         // Add CSRF token to response headers for AJAX requests
         if ($request->ajax() || $request->wantsJson()) {
+            $response->headers->set('X-CSRF-TOKEN', csrf_token());
+        }
+
+        // Add CSRF token to meta tag for forms
+        if ($request->isMethod('get')) {
             $response->headers->set('X-CSRF-TOKEN', csrf_token());
         }
 

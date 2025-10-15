@@ -650,8 +650,30 @@
         setInterval(refreshCsrfToken, 300000);
 
         // Refresh CSRF token before form submission
-        document.getElementById('loginForm').addEventListener('submit', function() {
-            refreshCsrfToken();
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            // Get fresh CSRF token before submission
+            fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.csrf_token) {
+                    // Update the CSRF token in the form
+                    const csrfInput = document.querySelector('input[name="_token"]');
+                    if (csrfInput) {
+                        csrfInput.value = data.csrf_token;
+                    }
+                    // Update meta tag
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                }
+            })
+            .catch(error => {
+                console.log('CSRF token refresh failed:', error);
+            });
         });
     </script>
 </body>

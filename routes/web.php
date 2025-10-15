@@ -56,7 +56,23 @@ Route::get('/health', function () {
 // CSRF Token Refresh Route
 Route::get('/csrf-token', function () {
     return response()->json([
-        'csrf_token' => csrf_token()
+        'csrf_token' => csrf_token(),
+        'session_id' => session()->getId(),
+        'session_lifetime' => config('session.lifetime'),
+        'session_driver' => config('session.driver')
+    ]);
+});
+
+// Debug CSRF Route
+Route::get('/debug-csrf', function () {
+    return response()->json([
+        'csrf_token' => csrf_token(),
+        'session_id' => session()->getId(),
+        'session_data' => session()->all(),
+        'session_lifetime' => config('session.lifetime'),
+        'session_driver' => config('session.driver'),
+        'app_env' => config('app.env'),
+        'app_debug' => config('app.debug')
     ]);
 });
 
