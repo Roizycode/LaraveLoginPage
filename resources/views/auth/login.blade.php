@@ -45,11 +45,12 @@
             background-attachment: fixed;
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            overflow-x: auto;
+            overflow: auto;
             position: relative;
             will-change: auto;
+            padding: 50px 20px;
         }
 
         body::before {
@@ -63,32 +64,48 @@
             z-index: 1;
         }
 
-        /* Custom Scrollbar */
+        /* Custom Scrollbar - Always visible */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 12px;
+            height: 12px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #1f1f1f;
-            border-radius: 4px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border: 1px solid #333;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #404040;
-            border-radius: 4px;
+            background: linear-gradient(45deg, #404040, #555555);
+            border-radius: 6px;
+            border: 1px solid #666;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #666666;
+            background: linear-gradient(45deg, #555555, #666666);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        ::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(45deg, #666666, #777777);
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: #1a1a1a;
+        }
+
+        /* Force scrollbar to always show and enable scrolling */
+        html {
+            overflow-y: auto;
+            overflow-x: hidden;
+            height: 100%;
         }
 
         /* Main Container */
         .auth-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) translateZ(0);
+            position: relative;
             z-index: 10;
             background: #1f1f1f;
             border: 1px solid #333333;
@@ -100,6 +117,7 @@
             backface-visibility: hidden;
             will-change: auto;
             contain: layout style paint;
+            margin: 20px auto;
         }
 
         .auth-title {
@@ -335,13 +353,6 @@
             }
         }
 
-        /* Ensure container never moves */
-        .auth-container {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) translateZ(0) !important;
-        }
 
         /* Loading Animation */
         .loading {
@@ -439,6 +450,9 @@
         </div>
     </div>
 
+    <!-- Extra content to enable scrolling -->
+    <div style="height: 200px; width: 100%; position: absolute; top: 100vh; left: 0; z-index: -1;"></div>
+
     <script>
         // SweetAlert2 configuration
         const Toast = Swal.mixin({
@@ -507,29 +521,74 @@
 
         // Social login handlers
         function handleGoogleLogin() {
+            // Lock container position
+            const container = document.querySelector('.auth-container');
+            const containerRect = container.getBoundingClientRect();
+            container.style.position = 'fixed';
+            container.style.top = containerRect.top + 'px';
+            container.style.left = containerRect.left + 'px';
+            container.style.transform = 'translateZ(0)';
+            
             Swal.fire({
                 icon: 'info',
                 title: 'Google Login',
                 text: 'Google login functionality would be implemented here.',
-                confirmButtonColor: '#9333EA'
+                confirmButtonColor: '#9333EA',
+                didClose: () => {
+                    // Restore container position
+                    container.style.position = 'relative';
+                    container.style.top = 'auto';
+                    container.style.left = 'auto';
+                    container.style.transform = 'none';
+                }
             });
         }
 
         function handleGitHubLogin() {
+            // Lock container position
+            const container = document.querySelector('.auth-container');
+            const containerRect = container.getBoundingClientRect();
+            container.style.position = 'fixed';
+            container.style.top = containerRect.top + 'px';
+            container.style.left = containerRect.left + 'px';
+            container.style.transform = 'translateZ(0)';
+            
             Swal.fire({
                 icon: 'info',
                 title: 'GitHub Login',
                 text: 'GitHub login functionality would be implemented here.',
-                confirmButtonColor: '#9333EA'
+                confirmButtonColor: '#9333EA',
+                didClose: () => {
+                    // Restore container position
+                    container.style.position = 'relative';
+                    container.style.top = 'auto';
+                    container.style.left = 'auto';
+                    container.style.transform = 'none';
+                }
             });
         }
 
         function handleAppleLogin() {
+            // Lock container position
+            const container = document.querySelector('.auth-container');
+            const containerRect = container.getBoundingClientRect();
+            container.style.position = 'fixed';
+            container.style.top = containerRect.top + 'px';
+            container.style.left = containerRect.left + 'px';
+            container.style.transform = 'translateZ(0)';
+            
             Swal.fire({
                 icon: 'info',
                 title: 'Apple Login',
                 text: 'Apple login functionality would be implemented here.',
-                confirmButtonColor: '#9333EA'
+                confirmButtonColor: '#9333EA',
+                didClose: () => {
+                    // Restore container position
+                    container.style.position = 'relative';
+                    container.style.top = 'auto';
+                    container.style.left = 'auto';
+                    container.style.transform = 'none';
+                }
             });
         }
 
@@ -562,6 +621,38 @@
                 confirmButtonColor: '#9333EA'
             });
         @endif
+
+        // CSRF Token Refresh
+        function refreshCsrfToken() {
+            fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.csrf_token) {
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    const csrfInputs = document.querySelectorAll('input[name="_token"]');
+                    csrfInputs.forEach(input => {
+                        input.value = data.csrf_token;
+                    });
+                }
+            })
+            .catch(error => {
+                console.log('CSRF token refresh failed:', error);
+            });
+        }
+
+        // Refresh CSRF token every 5 minutes
+        setInterval(refreshCsrfToken, 300000);
+
+        // Refresh CSRF token before form submission
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            refreshCsrfToken();
+        });
     </script>
 </body>
 </html>

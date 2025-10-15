@@ -53,6 +53,13 @@ Route::get('/health', function () {
     }
 });
 
+// CSRF Token Refresh Route
+Route::get('/csrf-token', function () {
+    return response()->json([
+        'csrf_token' => csrf_token()
+    ]);
+});
+
 // Fallback route - redirect any undefined route to login
 Route::fallback(function () {
     return redirect('/login');

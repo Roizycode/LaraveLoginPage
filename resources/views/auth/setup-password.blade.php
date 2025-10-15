@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Create Password</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,12 +22,15 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            background-attachment: fixed;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow-x: auto;
             position: relative;
+            /* Prevent zoom on input focus */
+            touch-action: manipulation;
         }
 
         body::before {
@@ -105,6 +108,11 @@
             color: #FFFFFF;
             transition: all 0.3s ease;
             outline: none;
+            /* Prevent zoom on mobile when focusing input */
+            font-size: 16px !important;
+            transform: translateZ(0);
+            -webkit-appearance: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .form-input:focus {
@@ -258,6 +266,23 @@
         .form-input.success {
             border-color: #EC4899;
             box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
+        }
+
+        /* Prevent background zoom/shift on input focus */
+        @media screen and (max-width: 768px) {
+            .form-input {
+                font-size: 16px !important;
+                transform: translateZ(0);
+            }
+            
+            body {
+                background-attachment: scroll;
+            }
+            
+            /* Prevent viewport zoom */
+            input, textarea, select {
+                font-size: 16px !important;
+            }
         }
 
         /* Responsive Design */
