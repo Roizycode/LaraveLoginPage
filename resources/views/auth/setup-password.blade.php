@@ -73,9 +73,9 @@
             border-radius: 16px;
             padding: 48px 40px;
             width: 100%;
-            max-width: 420px;
+            max-width: 450px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            margin: 20px;
+            margin: 0 auto;
         }
 
         .auth-title {
@@ -359,7 +359,6 @@
         </form>
 
         <div class="resend-section">
-            <a href="#" id="resendLink">Didn't receive a code? Resend <span id="countdown">(30)</span></a>
         </div>
 
         <div class="divider">
@@ -460,7 +459,34 @@
 
         passwordConfirmationInput.addEventListener('input', validatePasswordConfirmation);
 
-        // Form submission with validation
+        // CSRF Token Refresh
+        function refreshCsrfToken() {
+            fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.csrf_token) {
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    const csrfInputs = document.querySelectorAll('input[name="_token"]');
+                    csrfInputs.forEach(input => {
+                        input.value = data.csrf_token;
+                    });
+                }
+            })
+            .catch(error => {
+                console.log('CSRF token refresh failed:', error);
+            });
+        }
+
+        // Refresh CSRF token every 5 minutes
+        setInterval(refreshCsrfToken, 300000);
+
+        // Form submission with validation and CSRF token refresh
         document.getElementById('passwordForm').addEventListener('submit', function(e) {
             const passwordValid = validatePassword();
             const confirmationValid = validatePasswordConfirmation();
@@ -476,14 +502,40 @@
                 return;
             }
             
-            const btn = document.getElementById('passwordBtn');
-            const loading = document.getElementById('loading');
-            const btnText = document.getElementById('btnText');
+            // Prevent default submission temporarily
+            e.preventDefault();
             
-            // Hide text and show loading spinner in center
-            btnText.style.display = 'none';
-            loading.style.display = 'inline-block';
-            btn.disabled = true;
+            // Get fresh CSRF token before submission
+            fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.csrf_token) {
+                    // Update the CSRF token in the form
+                    const csrfInput = document.querySelector('input[name="_token"]');
+                    if (csrfInput) {
+                        csrfInput.value = data.csrf_token;
+                    }
+                    // Update meta tag
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    
+                    // Now submit the form with the fresh token
+                    this.submit();
+                } else {
+                    // If no token received, submit anyway (fallback)
+                    this.submit();
+                }
+            })
+            .catch(error => {
+                console.log('CSRF token refresh failed:', error);
+                // If refresh fails, submit anyway (fallback)
+                this.submit();
+            });
         });
 
         // Display validation errors

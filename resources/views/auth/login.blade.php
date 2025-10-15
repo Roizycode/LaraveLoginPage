@@ -45,12 +45,12 @@
             background-attachment: fixed;
             min-height: 100vh;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
             overflow: auto;
             position: relative;
             will-change: auto;
-            padding: 50px 20px;
+            padding: 20px;
         }
 
         body::before {
@@ -117,7 +117,7 @@
             backface-visibility: hidden;
             will-change: auto;
             contain: layout style paint;
-            margin: 20px auto;
+            margin: 0 auto;
         }
 
         .auth-title {
@@ -651,15 +651,33 @@
 
         // Refresh CSRF token before form submission
         document.getElementById('loginForm').addEventListener('submit', function(e) {
+            // Prevent default submission temporarily
+            e.preventDefault();
+            
+            // Show loading state
+            const btn = document.getElementById('loginBtn');
+            const loading = document.getElementById('loading');
+            const btnText = document.getElementById('btnText');
+            
+            btnText.style.display = 'none';
+            loading.style.display = 'inline-block';
+            btn.disabled = true;
+            
             // Get fresh CSRF token before submission
             fetch('/csrf-token', {
                 method: 'GET',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.csrf_token) {
                     // Update the CSRF token in the form
@@ -669,10 +687,27 @@
                     }
                     // Update meta tag
                     document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    
+                    // Now submit the form with the fresh token
+                    this.submit();
+                } else {
+                    throw new Error('No CSRF token received');
                 }
             })
             .catch(error => {
                 console.log('CSRF token refresh failed:', error);
+                // Reset button state
+                btnText.style.display = 'inline-block';
+                loading.style.display = 'none';
+                btn.disabled = false;
+                
+                // Show error and try submitting anyway
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Token Refresh Failed',
+                    text: 'Please try submitting again.',
+                    confirmButtonColor: '#9333EA'
+                });
             });
         });
     </script>

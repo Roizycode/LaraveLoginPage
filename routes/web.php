@@ -55,12 +55,26 @@ Route::get('/health', function () {
 
 // CSRF Token Refresh Route
 Route::get('/csrf-token', function () {
-    return response()->json([
-        'csrf_token' => csrf_token(),
-        'session_id' => session()->getId(),
-        'session_lifetime' => config('session.lifetime'),
-        'session_driver' => config('session.driver')
-    ]);
+    try {
+        // Ensure session is started
+        if (!session()->isStarted()) {
+            session()->start();
+        }
+        
+        return response()->json([
+            'csrf_token' => csrf_token(),
+            'session_id' => session()->getId(),
+            'session_lifetime' => config('session.lifetime'),
+            'session_driver' => config('session.driver'),
+            'timestamp' => time()
+        ]);
+    } catch (Exception $e) {
+        \Log::error('CSRF token generation failed: ' . $e->getMessage());
+        return response()->json([
+            'error' => 'Failed to generate CSRF token',
+            'message' => $e->getMessage()
+        ], 500);
+    }
 });
 
 // Debug CSRF Route

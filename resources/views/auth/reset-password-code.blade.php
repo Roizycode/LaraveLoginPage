@@ -70,9 +70,9 @@
             border-radius: 16px;
             padding: 48px 40px;
             width: 100%;
-            max-width: 420px;
+            max-width: 450px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            margin: 20px;
+            margin: 0 auto;
         }
 
         .auth-title {
@@ -363,7 +363,34 @@
 
 
 
-        // Form validation
+        // CSRF Token Refresh
+        function refreshCsrfToken() {
+            fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.csrf_token) {
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    const csrfInputs = document.querySelectorAll('input[name="_token"]');
+                    csrfInputs.forEach(input => {
+                        input.value = data.csrf_token;
+                    });
+                }
+            })
+            .catch(error => {
+                console.log('CSRF token refresh failed:', error);
+            });
+        }
+
+        // Refresh CSRF token every 5 minutes
+        setInterval(refreshCsrfToken, 300000);
+
+        // Form validation with CSRF token refresh
         document.getElementById('resetForm').addEventListener('submit', function(e) {
             const code = fullCodeInput.value;
             
@@ -378,14 +405,40 @@
                 return;
             }
             
-            // Show loading state
-            const btn = document.getElementById('resetBtn');
-            const loading = document.getElementById('loading');
-            const btnText = document.getElementById('btnText');
+            // Prevent default submission temporarily
+            e.preventDefault();
             
-            btnText.style.display = 'none';
-            loading.style.display = 'inline-block';
-            btn.disabled = true;
+            // Get fresh CSRF token before submission
+            fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.csrf_token) {
+                    // Update the CSRF token in the form
+                    const csrfInput = document.querySelector('input[name="_token"]');
+                    if (csrfInput) {
+                        csrfInput.value = data.csrf_token;
+                    }
+                    // Update meta tag
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    
+                    // Now submit the form with the fresh token
+                    this.submit();
+                } else {
+                    // If no token received, submit anyway (fallback)
+                    this.submit();
+                }
+            })
+            .catch(error => {
+                console.log('CSRF token refresh failed:', error);
+                // If refresh fails, submit anyway (fallback)
+                this.submit();
+            });
         });
 
         // Display validation errors

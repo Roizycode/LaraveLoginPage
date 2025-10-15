@@ -70,9 +70,9 @@
             border-radius: 16px;
             padding: 48px 40px;
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            margin: 20px;
+            margin: 0 auto;
             text-align: center;
         }
 
@@ -241,7 +241,6 @@
         </form>
 
         <div class="resend-section">
-            <a href="#" id="resendLink">Didn't receive a code? Resend <span id="countdown">(30)</span></a>
         </div>
 
         <div class="back-link">

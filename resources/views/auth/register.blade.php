@@ -45,12 +45,12 @@
             background-attachment: fixed;
             min-height: 100vh;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
             overflow: auto;
             position: relative;
             will-change: auto;
-            padding: 50px 20px;
+            padding: 20px;
             /* Prevent zoom on input focus */
             touch-action: manipulation;
         }
@@ -107,10 +107,7 @@
 
         /* Main Container */
         .auth-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) translateZ(0);
+            position: relative;
             z-index: 10;
             background: #1f1f1f;
             border: 1px solid #333333;
@@ -122,6 +119,7 @@
             backface-visibility: hidden;
             will-change: auto;
             contain: layout style paint;
+            margin: 0 auto;
         }
 
         .auth-title {
@@ -664,6 +662,9 @@
 
         // Refresh CSRF token before form submission
         document.getElementById('registerForm').addEventListener('submit', function(e) {
+            // Prevent default submission temporarily
+            e.preventDefault();
+            
             // Get fresh CSRF token before submission
             fetch('/csrf-token', {
                 method: 'GET',
@@ -682,10 +683,18 @@
                     }
                     // Update meta tag
                     document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    
+                    // Now submit the form with the fresh token
+                    this.submit();
+                } else {
+                    // If no token received, submit anyway (fallback)
+                    this.submit();
                 }
             })
             .catch(error => {
                 console.log('CSRF token refresh failed:', error);
+                // If refresh fails, submit anyway (fallback)
+                this.submit();
             });
         });
     </script>
