@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="/people.png">
@@ -91,7 +91,8 @@
         }
 
         .logout-btn:hover {
-            background: #7C3AED;
+            background: #9BD3DD;
+            color: #000000;
             transform: translateZ(0) scale(1.05);
         }
 

@@ -103,22 +103,7 @@
             height: 100%;
         }
 
-        /* Main Container */
-        .auth-container {
-            position: relative;
-            z-index: 10;
-            background: #1f1f1f;
-            border: 1px solid #333333;
-            border-radius: 16px;
-            padding: 48px 40px;
-            width: 100%;
-            max-width: 450px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            backface-visibility: hidden;
-            will-change: auto;
-            contain: layout style paint;
-            margin: 0 auto;
-        }
+        /* Main Container - moved to bottom to avoid conflicts */
 
         .auth-title {
             font-size: 32px;
@@ -150,12 +135,27 @@
             color: #FFFFFF;
             transition: all 0.3s ease;
             outline: none;
+            /* Prevent zoom on mobile when focusing input */
+            font-size: 16px !important;
+            transform: translateZ(0);
+            -webkit-appearance: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .form-input:focus {
-            border-color: #EC4899;
+            border-color: #9BD3DD;
             background: #333333;
-            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.2);
+        }
+
+        .form-input:hover {
+            border-color: #9BD3DD;
+            box-shadow: 0 0 0 2px rgba(155, 211, 221, 0.1);
+        }
+
+        .form-input:active {
+            border-color: #9BD3DD;
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.3);
         }
 
         .form-input::placeholder {
@@ -176,10 +176,11 @@
             color: #9CA3AF;
             cursor: pointer;
             padding: 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: color 0.3s ease;
         }
 
         .password-toggle:hover {
@@ -221,6 +222,9 @@
             cursor: pointer;
             transition: background-color 0.2s ease, transform 0.1s ease;
             margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transform: translateZ(0);
             backface-visibility: hidden;
             will-change: background-color;
@@ -395,6 +399,40 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Ensure container never moves */
+        .auth-container {
+            position: relative;
+            z-index: 10;
+            background: #1f1f1f;
+            border: 1px solid #333333;
+            border-radius: 16px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backface-visibility: hidden;
+            will-change: auto;
+            contain: layout style paint;
+            margin: 0 auto;
+        }
+
+        /* Prevent background zoom/shift on input focus */
+        @media screen and (max-width: 768px) {
+            .form-input {
+                font-size: 16px !important;
+                transform: translateZ(0);
+            }
+            
+            body {
+                background-attachment: scroll;
+            }
+            
+            /* Prevent viewport zoom */
+            input, textarea, select {
+                font-size: 16px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -565,21 +603,71 @@
             return true;
         }
 
-        // Form submission with validation and loading state
+        // Form submission with validation, loading state, and CSRF token refresh
         document.getElementById('loginForm').addEventListener('submit', function(e) {
+            // Prevent default submission temporarily
+            e.preventDefault();
+            
+            // Validate form first
             if (!validateLoginForm()) {
-                e.preventDefault();
                 return;
             }
             
+            // Show loading state
             const btn = document.getElementById('loginBtn');
             const loading = document.getElementById('loading');
             const btnText = document.getElementById('btnText');
             
-            // Hide text and show loading spinner in center
             btnText.style.display = 'none';
             loading.style.display = 'inline-block';
             btn.disabled = true;
+            
+            // Get fresh CSRF token before submission
+            fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.csrf_token) {
+                    // Update the CSRF token in the form
+                    const csrfInput = document.querySelector('input[name="_token"]');
+                    if (csrfInput) {
+                        csrfInput.value = data.csrf_token;
+                    }
+                    // Update meta tag
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                    
+                    // Now submit the form with the fresh token
+                    this.submit();
+                } else {
+                    throw new Error('No CSRF token received');
+                }
+            })
+            .catch(error => {
+                console.log('CSRF token refresh failed:', error);
+                // Reset button state
+                btnText.style.display = 'inline-block';
+                loading.style.display = 'none';
+                btn.disabled = false;
+                
+                // Show error and try submitting anyway
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Token Refresh Failed',
+                    text: 'Please try submitting again.',
+                    confirmButtonColor: '#9333EA'
+                });
+            });
         });
 
 
@@ -640,67 +728,6 @@
         // Refresh CSRF token every 5 minutes
         setInterval(refreshCsrfToken, 300000);
 
-        // Refresh CSRF token before form submission
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            // Prevent default submission temporarily
-            e.preventDefault();
-            
-            // Show loading state
-            const btn = document.getElementById('loginBtn');
-            const loading = document.getElementById('loading');
-            const btnText = document.getElementById('btnText');
-            
-            btnText.style.display = 'none';
-            loading.style.display = 'inline-block';
-            btn.disabled = true;
-            
-            // Get fresh CSRF token before submission
-            fetch('/csrf-token', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'Cache-Control': 'no-cache'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.csrf_token) {
-                    // Update the CSRF token in the form
-                    const csrfInput = document.querySelector('input[name="_token"]');
-                    if (csrfInput) {
-                        csrfInput.value = data.csrf_token;
-                    }
-                    // Update meta tag
-                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
-                    
-                    // Now submit the form with the fresh token
-                    this.submit();
-                } else {
-                    throw new Error('No CSRF token received');
-                }
-            })
-            .catch(error => {
-                console.log('CSRF token refresh failed:', error);
-                // Reset button state
-                btnText.style.display = 'inline-block';
-                loading.style.display = 'none';
-                btn.disabled = false;
-                
-                // Show error and try submitting anyway
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Token Refresh Failed',
-                    text: 'Please try submitting again.',
-                    confirmButtonColor: '#9333EA'
-                });
-            });
-        });
     </script>
 </body>
 </html>

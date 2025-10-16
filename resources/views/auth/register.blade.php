@@ -152,9 +152,19 @@
         }
 
         .form-input:focus {
-            border-color: #EC4899;
+            border-color: #9BD3DD;
             background: #333333;
-            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.2);
+        }
+
+        .form-input:hover {
+            border-color: #9BD3DD;
+            box-shadow: 0 0 0 2px rgba(155, 211, 221, 0.1);
+        }
+
+        .form-input:active {
+            border-color: #9BD3DD;
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.3);
         }
 
         .form-input::placeholder {
