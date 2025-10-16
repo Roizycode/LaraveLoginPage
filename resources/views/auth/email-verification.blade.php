@@ -227,28 +227,20 @@
             <p>Enter the code sent to {{ Auth::user()->email ?? 'your email address' }}</p>
         </div>
 
-        <form id="verificationForm" method="POST" action="{{ route('dashboard') }}">
+        <form id="verificationForm" method="POST" action="{{ route('email.verify') }}">
             @csrf
             <div class="code-inputs">
-                <input type="text" class="code-input" maxlength="1" data-index="0" required>
-                <input type="text" class="code-input" maxlength="1" data-index="1" required>
-                <input type="text" class="code-input" maxlength="1" data-index="2" required>
-                <input type="text" class="code-input" maxlength="1" data-index="3" required>
-                <input type="text" class="code-input" maxlength="1" data-index="4" required>
-                <input type="text" class="code-input" maxlength="1" data-index="5" required>
+                <input type="text" name="code1" class="code-input" maxlength="1" pattern="[0-9]" required>
+                <input type="text" name="code2" class="code-input" maxlength="1" pattern="[0-9]" required>
+                <input type="text" name="code3" class="code-input" maxlength="1" pattern="[0-9]" required>
+                <input type="text" name="code4" class="code-input" maxlength="1" pattern="[0-9]" required>
+                <input type="text" name="code5" class="code-input" maxlength="1" pattern="[0-9]" required>
+                <input type="text" name="code6" class="code-input" maxlength="1" pattern="[0-9]" required>
             </div>
             <input type="hidden" name="code" id="verificationCode">
         </form>
 
         <div class="resend-section">
-        </div>
-
-        <div class="back-link">
-            <a href="{{ route('login') }}">Back to sign-in</a>
-        </div>
-
-        <div class="developer-credit">
-            <p>Developed by: Roiz Abajon & ALFONSO</p>
         </div>
     </div>
 
@@ -268,35 +260,63 @@
 
         // Code input functionality
         const codeInputs = document.querySelectorAll('.code-input');
-        const verifyBtn = document.getElementById('verifyBtn');
         const verificationCode = document.getElementById('verificationCode');
-        let currentIndex = 0;
 
         codeInputs.forEach((input, index) => {
             input.addEventListener('input', function(e) {
-                const value = e.target.value;
-                
                 // Only allow numbers
-                if (!/^\d$/.test(value)) {
-                    e.target.value = '';
-                    return;
-                }
-
+                this.value = this.value.replace(/[^0-9]/g, '');
+                
                 // Add filled class
-                e.target.classList.add('filled');
-
-                // Move to next input
-                if (value && index < codeInputs.length - 1) {
+                if (this.value) {
+                    this.classList.add('filled');
+                } else {
+                    this.classList.remove('filled');
+                }
+                
+                // Move to next input if current is filled
+                if (this.value.length === 1 && index < codeInputs.length - 1) {
                     codeInputs[index + 1].focus();
                 }
-
-                // Check if all inputs are filled
-                checkAllFilled();
+                
+                // Update hidden input with full code
+                updateVerificationCode();
+                
+                // Auto-submit when 6th digit is entered
+                if (index === 5 && this.value.length === 1) {
+                    setTimeout(() => {
+                        const fullCode = verificationCode.value;
+                        if (fullCode.length === 6) {
+                            // Disable all inputs to prevent further typing
+                            codeInputs.forEach(input => {
+                                input.disabled = true;
+                                input.style.opacity = '0.6';
+                            });
+                            
+                            // Show loading state
+                            Swal.fire({
+                                title: 'Verifying Code...',
+                                text: 'Please wait while we verify your code.',
+                                allowOutsideClick: false,
+                                showConfirmButton: false,
+                                willOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Add a small delay to ensure the loading state is visible
+                            setTimeout(() => {
+                                console.log('Submitting form with code:', fullCode);
+                                document.getElementById('verificationForm').submit();
+                            }, 500);
+                        }
+                    }, 100);
+                }
             });
 
             input.addEventListener('keydown', function(e) {
-                // Handle backspace
-                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                // Move to previous input on backspace if current is empty
+                if (e.key === 'Backspace' && this.value === '' && index > 0) {
                     codeInputs[index - 1].focus();
                     codeInputs[index - 1].classList.remove('filled');
                 }
@@ -314,112 +334,110 @@
                     }
                 });
                 
-                checkAllFilled();
+                updateVerificationCode();
+                
+                // Auto-submit when 6 digits are pasted
+                if (numbers.length >= 6) {
+                    setTimeout(() => {
+                        const fullCode = verificationCode.value;
+                        if (fullCode.length === 6) {
+                            // Disable all inputs to prevent further typing
+                            codeInputs.forEach(input => {
+                                input.disabled = true;
+                                input.style.opacity = '0.6';
+                            });
+                            
+                            // Show loading state
+                            Swal.fire({
+                                title: 'Verifying Code...',
+                                text: 'Please wait while we verify your code.',
+                                allowOutsideClick: false,
+                                showConfirmButton: false,
+                                willOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Add a small delay to ensure the loading state is visible
+                            setTimeout(() => {
+                                console.log('Submitting form with code:', fullCode);
+                                document.getElementById('verificationForm').submit();
+                            }, 500);
+                        }
+                    }, 100);
+                }
             });
         });
 
-        function checkAllFilled() {
-            const allFilled = Array.from(codeInputs).every(input => input.value);
-            if (allFilled) {
-                // Combine all values
-                const code = Array.from(codeInputs).map(input => input.value).join('');
-                verificationCode.value = code;
-                
-                // Automatically submit the form when all 6 digits are entered
-                setTimeout(() => {
-                    document.getElementById('verificationForm').submit();
-                }, 100);
-            } else {
-                verifyBtn.style.display = 'none';
-            }
+        function updateVerificationCode() {
+            const code = Array.from(codeInputs).map(input => input.value).join('');
+            verificationCode.value = code;
         }
 
-        // Verification form handling - direct submit to dashboard
+        // Form validation
         document.getElementById('verificationForm').addEventListener('submit', function(e) {
-            // Let the form submit naturally to dashboard
-            // The dashboard route will handle verification
-        });
-
-        // Resend functionality with countdown
-        let countdown = 30;
-        const resendLink = document.getElementById('resendLink');
-        const countdownSpan = document.getElementById('countdown');
-
-        function updateCountdown() {
-            countdownSpan.textContent = `(${countdown})`;
-            if (countdown > 0) {
-                countdown--;
-                setTimeout(updateCountdown, 1000);
-            } else {
-                resendLink.classList.remove('disabled');
-                resendLink.onclick = handleResend;
-            }
-        }
-
-        function handleResend(e) {
-            e.preventDefault();
+            const code = verificationCode.value;
             
-            if (resendLink.classList.contains('disabled')) return;
-
-            resendLink.classList.add('disabled');
-            countdown = 30;
-            updateCountdown();
-
-            // Send resend request
-            const formData = new FormData();
-            formData.append('email', '{{ Auth::user()->email ?? "" }}');
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-
-            fetch('{{ route("email.resend") }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Code Sent!',
-                        text: 'A new verification code has been sent to your email.',
-                        confirmButtonColor: '#9333EA'
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Failed to send verification code.',
-                        confirmButtonColor: '#9333EA'
-                    });
-                }
-            })
-            .catch(error => {
+            if (code.length !== 6) {
+                e.preventDefault();
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: 'Something went wrong. Please try again.',
+                    title: 'Invalid Code',
+                    text: 'Please enter a complete 6-digit code.',
                     confirmButtonColor: '#9333EA'
                 });
+                return;
+            }
+        });
+
+        // Display validation errors
+        @if ($errors->any())
+            console.log('Validation errors detected:', '{{ $errors->first() }}');
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Code',
+                text: '{{ $errors->first() }}',
+                confirmButtonColor: '#9333EA'
+            }).then(() => {
+                // Re-enable inputs and clear them
+                codeInputs.forEach(input => {
+                    input.disabled = false;
+                    input.style.opacity = '1';
+                    input.value = '';
+                    input.classList.remove('filled');
+                });
+                verificationCode.value = '';
+                codeInputs[0].focus();
             });
-        }
+        @endif
 
-        // Start countdown on page load
-        updateCountdown();
+        // Display session error messages
+        @if (session('error'))
+            console.log('Session error detected:', '{{ session('error') }}');
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Code',
+                text: '{{ session('error') }}',
+                confirmButtonColor: '#9333EA'
+            }).then(() => {
+                // Re-enable inputs and clear them
+                codeInputs.forEach(input => {
+                    input.disabled = false;
+                    input.style.opacity = '1';
+                    input.value = '';
+                    input.classList.remove('filled');
+                });
+                verificationCode.value = '';
+                codeInputs[0].focus();
+            });
+        @endif
 
-        // Display session messages
+        // Display session success messages
         @if (session('success'))
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
                 text: '{{ session('success') }}',
-                confirmButtonColor: '#9333EA'
-            });
-        @endif
-
-        @if (session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: '{{ session('error') }}',
                 confirmButtonColor: '#9333EA'
             });
         @endif

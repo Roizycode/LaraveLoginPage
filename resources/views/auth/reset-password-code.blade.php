@@ -151,6 +151,11 @@
             box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
         }
 
+        .code-input.filled {
+            border-color: #EC4899;
+            background: #333333;
+        }
+
 
         .continue-btn {
             width: 100%;
@@ -187,34 +192,6 @@
             text-decoration: underline;
         }
 
-        .terms {
-            text-align: center;
-            margin-top: 40px;
-            color: #9CA3AF;
-            font-size: 12px;
-        }
-
-        .terms a {
-            color: #9CA3AF;
-            text-decoration: none;
-        }
-
-        .terms a:hover {
-            text-decoration: underline;
-        }
-
-        .developer-credit {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #404040;
-        }
-
-        .developer-credit p {
-            color: #FFFFFF;
-            font-size: 12px;
-            margin: 0;
-        }
 
         /* Responsive Design */
         @media (max-width: 480px) {
@@ -268,23 +245,7 @@
             
             <input type="hidden" name="code" id="fullCode">
 
-            <button type="submit" class="continue-btn" id="resetBtn">
-                <span class="loading" id="loading"></span>
-                <span id="btnText">Continue</span>
-            </button>
         </form>
-
-        <div class="auth-link">
-            <a href="{{ route('login') }}">Back to Login</a>
-        </div>
-
-        <div class="terms">
-            <a href="#">Terms of Service and Privacy Policy</a>
-        </div>
-
-        <div class="developer-credit">
-            <p>Developed by: Roiz Abajon & ALFONSO</p>
-        </div>
     </div>
 
     <script>
@@ -310,6 +271,13 @@
                 // Only allow numbers
                 this.value = this.value.replace(/[^0-9]/g, '');
                 
+                // Add filled class
+                if (this.value) {
+                    this.classList.add('filled');
+                } else {
+                    this.classList.remove('filled');
+                }
+                
                 // Move to next input if current is filled
                 if (this.value.length === 1 && index < codeInputs.length - 1) {
                     codeInputs[index + 1].focus();
@@ -323,7 +291,28 @@
                     setTimeout(() => {
                         const fullCode = fullCodeInput.value;
                         if (fullCode.length === 6) {
-                            document.getElementById('resetForm').submit();
+                            // Disable all inputs to prevent further typing
+                            codeInputs.forEach(input => {
+                                input.disabled = true;
+                                input.style.opacity = '0.6';
+                            });
+                            
+                            // Show loading state
+                            Swal.fire({
+                                title: 'Verifying Code...',
+                                text: 'Please wait while we verify your code.',
+                                allowOutsideClick: false,
+                                showConfirmButton: false,
+                                willOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Add a small delay to ensure the loading state is visible
+                            setTimeout(() => {
+                                console.log('Submitting form with code:', fullCode);
+                                document.getElementById('resetForm').submit();
+                            }, 500);
                         }
                     }, 100);
                 }
@@ -333,26 +322,54 @@
                 // Move to previous input on backspace if current is empty
                 if (e.key === 'Backspace' && this.value === '' && index > 0) {
                     codeInputs[index - 1].focus();
+                    codeInputs[index - 1].classList.remove('filled');
                 }
             });
 
             input.addEventListener('paste', function(e) {
                 e.preventDefault();
-                const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '');
+                const pastedData = e.clipboardData.getData('text');
+                const numbers = pastedData.replace(/\D/g, '').slice(0, 6);
                 
-                for (let i = 0; i < pastedData.length && i < codeInputs.length; i++) {
-                    codeInputs[i].value = pastedData[i];
-                }
-                
-                // Focus the next empty input or the last one
-                const nextEmpty = Array.from(codeInputs).find(input => !input.value);
-                if (nextEmpty) {
-                    nextEmpty.focus();
-                } else {
-                    codeInputs[codeInputs.length - 1].focus();
-                }
+                numbers.split('').forEach((num, i) => {
+                    if (codeInputs[i]) {
+                        codeInputs[i].value = num;
+                        codeInputs[i].classList.add('filled');
+                    }
+                });
                 
                 updateFullCode();
+                
+                // Auto-submit when 6 digits are pasted
+                if (numbers.length >= 6) {
+                    setTimeout(() => {
+                        const fullCode = fullCodeInput.value;
+                        if (fullCode.length === 6) {
+                            // Disable all inputs to prevent further typing
+                            codeInputs.forEach(input => {
+                                input.disabled = true;
+                                input.style.opacity = '0.6';
+                            });
+                            
+                            // Show loading state
+                            Swal.fire({
+                                title: 'Verifying Code...',
+                                text: 'Please wait while we verify your code.',
+                                allowOutsideClick: false,
+                                showConfirmButton: false,
+                                willOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Add a small delay to ensure the loading state is visible
+                            setTimeout(() => {
+                                console.log('Submitting form with code:', fullCode);
+                                document.getElementById('resetForm').submit();
+                            }, 500);
+                        }
+                    }, 100);
+                }
             });
         });
 
@@ -443,11 +460,43 @@
 
         // Display validation errors
         @if ($errors->any())
+            console.log('Validation errors detected:', '{{ $errors->first() }}');
             Swal.fire({
                 icon: 'error',
-                title: 'Validation Error',
+                title: 'Invalid Code',
                 text: '{{ $errors->first() }}',
                 confirmButtonColor: '#9333EA'
+            }).then(() => {
+                // Re-enable inputs and clear them
+                codeInputs.forEach(input => {
+                    input.disabled = false;
+                    input.style.opacity = '1';
+                    input.value = '';
+                    input.classList.remove('filled');
+                });
+                fullCodeInput.value = '';
+                codeInputs[0].focus();
+            });
+        @endif
+
+        // Display session error messages
+        @if (session('error'))
+            console.log('Session error detected:', '{{ session('error') }}');
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Code',
+                text: '{{ session('error') }}',
+                confirmButtonColor: '#9333EA'
+            }).then(() => {
+                // Re-enable inputs and clear them
+                codeInputs.forEach(input => {
+                    input.disabled = false;
+                    input.style.opacity = '1';
+                    input.value = '';
+                    input.classList.remove('filled');
+                });
+                fullCodeInput.value = '';
+                codeInputs[0].focus();
             });
         @endif
 

@@ -243,14 +243,6 @@
         <div class="auth-link">
             <a href="{{ route('login') }}">Back to Login</a>
         </div>
-
-        <div class="terms">
-            <a href="#">Terms of Service and Privacy Policy</a>
-        </div>
-
-        <div class="developer-credit">
-            <p>Developed by: Roiz Abajon & ALFONSO</p>
-        </div>
     </div>
 
     <script>

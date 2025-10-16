@@ -148,9 +148,6 @@
             @csrf
         </form>
 
-        <div class="developer-credit">
-            <p>Developed by: Roiz Abajon & ALFONSO</p>
-        </div>
     </div>
 
     <script>

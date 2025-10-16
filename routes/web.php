@@ -105,6 +105,7 @@ Route::get('/dashboard', function () {
 Route::post('/dashboard', function (Request $request) {
     // Handle email verification code
     $code = $request->input('code');
+    \Log::info('Dashboard POST received - Code: ' . ($code ?: 'null') . ', Length: ' . ($code ? strlen($code) : 'null'));
     
     if ($code && strlen($code) === 6) {
         // Try to get user from session first, then from auth
@@ -144,13 +145,16 @@ Route::post('/dashboard', function (Request $request) {
                 
                 return redirect()->route('dashboard')->with('success', 'Email verified successfully!');
             } else {
-                \Log::info('Verification code mismatch for user: ' . $user->email);
-                return redirect()->back()->with('error', 'Invalid verification code.');
+                \Log::info('Verification code mismatch for user: ' . $user->email . ' - Expected: ' . $user->email_verification_token . ', Got: ' . $code);
+                return redirect()->route('email.verification.required')->with('error', 'The code you entered is invalid. Please check your email and try again.');
             }
         } else {
             \Log::info('No user found for verification code: ' . $code);
-            return redirect()->back()->with('error', 'User not found. Please try registering again.');
+            return redirect()->route('email.verification.required')->with('error', 'Your session has expired. Please register again or check your email for the verification code.');
         }
+    } else {
+        \Log::info('Invalid code format - Code: ' . ($code ?: 'null') . ', Length: ' . ($code ? strlen($code) : 'null'));
+        return redirect()->route('email.verification.required')->with('error', 'Please enter a valid 6-digit verification code.');
     }
     
     return redirect()->route('dashboard');
@@ -169,7 +173,8 @@ Route::get('/register/password', [RegisterController::class, 'showPasswordSetup'
 Route::post('/register/password', [RegisterController::class, 'completeRegistration'])->name('register.complete');
 
 // Email Verification Routes
-Route::get('/email/verify/{token}', [RegisterController::class, 'verifyEmail'])->name('email.verify');
+Route::get('/email/verify/{token}', [RegisterController::class, 'verifyEmail'])->name('email.verify.token');
+Route::post('/email/verify', [RegisterController::class, 'verifyEmailCode'])->name('email.verify');
 Route::post('/email/resend-verification', [RegisterController::class, 'resendVerification'])->name('email.resend');
 Route::get('/email/verification-required', [RegisterController::class, 'showEmailVerificationPage'])->name('email.verification.required');
 
@@ -186,6 +191,17 @@ Route::get('/debug/user/{email}', function($email) {
     }
     return response()->json(['error' => 'User not found']);
 });
+
+// Test route to check error handling
+Route::get('/test-error', function() {
+    return redirect()->back()->with('error', 'Test error message');
+});
+
+// Test route to check error handling on email verification page
+Route::get('/test-email-error', function() {
+    return view('auth.email-verification')->with('error', 'Test error message for email verification');
+});
+
 
 // Password Reset Routes
 Route::get('/forgot-password', [PasswordResetController::class, 'showForgotPasswordForm'])->name('password.request');

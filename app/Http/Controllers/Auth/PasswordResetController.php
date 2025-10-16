@@ -30,6 +30,7 @@ class PasswordResetController extends Controller
         
         // Store code in cache for 15 minutes
         Cache::put('password_reset_' . $user->email, $resetCode, 900);
+        \Log::info('Reset code generated for ' . $user->email . ': ' . $resetCode);
         
         // Send password reset code email
         $this->sendResetCodeEmail($user, $resetCode);
@@ -54,6 +55,7 @@ class PasswordResetController extends Controller
         
         foreach ($users as $u) {
             $cachedCode = Cache::get('password_reset_' . $u->email);
+            \Log::info('Checking user ' . $u->email . ' - Cached code: ' . ($cachedCode ?: 'null') . ', Request code: ' . $request->code);
             if ($cachedCode && $cachedCode === $request->code) {
                 $user = $u;
                 break;
@@ -61,6 +63,7 @@ class PasswordResetController extends Controller
         }
 
         if (!$user) {
+            \Log::info('Reset code verification failed: Code ' . $request->code . ' not found in cache');
             return redirect()->back()->with('error', 'Invalid or expired reset code.');
         }
 
@@ -97,7 +100,7 @@ class PasswordResetController extends Controller
             'password' => [
                 'required', 
                 'confirmed', 
-                'min:6'
+                'min:8'
             ]
         ]);
 
@@ -111,6 +114,11 @@ class PasswordResetController extends Controller
         $cachedCode = Cache::get('password_reset_' . $user->email);
         if (!$cachedCode || $cachedCode !== $resetCode) {
             return redirect()->route('password.reset.form')->with('error', 'Reset code has expired. Please request a new one.');
+        }
+
+        // Check if the new password is the same as the current password
+        if (Hash::check($request->password, $user->password)) {
+            return redirect()->back()->with('error', 'The new password must be different from your current password. Please choose a different password.');
         }
 
         // Update password

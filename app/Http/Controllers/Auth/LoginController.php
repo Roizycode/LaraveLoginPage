@@ -31,7 +31,7 @@ class LoginController extends Controller
         if (!$user) {
             \Log::info('Login failed: User not found for email: ' . $credentials['email']);
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'email' => 'The provided credentials are invalid. Please check your email and password.',
             ]);
         }
 
@@ -58,7 +58,7 @@ class LoginController extends Controller
 
         \Log::info('Login failed: Auth::attempt failed for user: ' . $user->email);
         throw ValidationException::withMessages([
-            'email' => __('auth.failed'),
+            'email' => 'The provided credentials are invalid. Please check your email and password.',
         ]);
     }
 

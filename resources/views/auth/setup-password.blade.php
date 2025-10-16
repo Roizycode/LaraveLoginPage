@@ -75,6 +75,9 @@
             width: 100%;
             max-width: 450px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backface-visibility: hidden;
+            will-change: auto;
+            contain: layout style paint;
             margin: 0 auto;
         }
 
@@ -125,6 +128,8 @@
             color: #9CA3AF;
         }
 
+
+
         .password-input-container {
             position: relative;
         }
@@ -148,6 +153,22 @@
 
         .password-toggle:hover {
             color: #FFFFFF;
+        }
+
+        .password-toggle .eye-open {
+            display: block;
+        }
+
+        .password-toggle .eye-closed {
+            display: none;
+        }
+
+        .password-toggle.show-password .eye-open {
+            display: none;
+        }
+
+        .password-toggle.show-password .eye-closed {
+            display: block;
         }
 
         .continue-btn {
@@ -329,13 +350,18 @@
                 <div class="password-input-container">
                     <input type="password" name="password" id="password" class="form-input" placeholder="Create a strong password" required>
                     <button type="button" class="password-toggle" id="passwordToggle">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Open Eye Icon (visible when password is hidden) -->
+                        <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" fill="none"/>
                             <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
                         </svg>
+                        <!-- Closed Eye Icon (visible when password is shown) -->
+                        <svg class="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2"/>
+                        </svg>
                     </button>
                 </div>
-                <div class="error-message" id="passwordError">Password must be at least 8 characters long</div>
             </div>
 
             <div class="form-group">
@@ -343,9 +369,15 @@
                 <div class="password-input-container">
                     <input type="password" name="password_confirmation" id="passwordConfirmation" class="form-input" placeholder="Confirm your password" required>
                     <button type="button" class="password-toggle" id="confirmPasswordToggle">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Open Eye Icon (visible when password is hidden) -->
+                        <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" fill="none"/>
                             <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                        <!-- Closed Eye Icon (visible when password is shown) -->
+                        <svg class="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2"/>
                         </svg>
                     </button>
                 </div>
@@ -361,17 +393,11 @@
         <div class="resend-section">
         </div>
 
-        <div class="divider">
-            <span>OR</span>
-        </div>
 
         <div class="back-link">
             <a href="{{ route('register') }}">Go back to registration</a>
         </div>
 
-        <div class="developer-credit">
-            <p>Developed by: Roiz Abajon & ALFONSO</p>
-        </div>
     </div>
 
     <script>
@@ -391,14 +417,30 @@
         // Password toggle functionality
         document.getElementById('passwordToggle').addEventListener('click', function() {
             const passwordInput = document.querySelector('input[name="password"]');
+            const toggleButton = this;
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
+            
+            // Toggle the eye icon classes
+            if (type === 'text') {
+                toggleButton.classList.add('show-password');
+            } else {
+                toggleButton.classList.remove('show-password');
+            }
         });
 
         document.getElementById('confirmPasswordToggle').addEventListener('click', function() {
             const passwordInput = document.querySelector('input[name="password_confirmation"]');
+            const toggleButton = this;
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
+            
+            // Toggle the eye icon classes
+            if (type === 'text') {
+                toggleButton.classList.add('show-password');
+            } else {
+                toggleButton.classList.remove('show-password');
+            }
         });
 
         // Password validation
@@ -456,6 +498,7 @@
             validatePassword();
             validatePasswordConfirmation(); // Re-validate confirmation when password changes
         });
+
 
         passwordConfirmationInput.addEventListener('input', validatePasswordConfirmation);
 
