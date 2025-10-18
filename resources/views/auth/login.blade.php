@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sign in</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="/people.png">
     <style>
@@ -142,21 +143,13 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .form-input:focus {
+        .form-input:focus-visible {
             border-color: #9BD3DD;
             background: #333333;
             box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.2);
         }
 
-        .form-input:hover {
-            border-color: #9BD3DD;
-            box-shadow: 0 0 0 2px rgba(155, 211, 221, 0.1);
-        }
-
-        .form-input:active {
-            border-color: #9BD3DD;
-            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.3);
-        }
+        /* No hover/active color changes; highlight only on keyboard/mouse focus */
 
         .form-input::placeholder {
             color: #9CA3AF;
@@ -220,7 +213,7 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
+            transition: none; /* hover/active animations disabled */
             margin-bottom: 24px;
             display: flex;
             align-items: center;
@@ -229,15 +222,7 @@
             backface-visibility: hidden;
             will-change: background-color;
         }
-
-        .continue-btn:hover {
-            background: #F3F4F6;
-            transform: translateZ(0) scale(1.02);
-        }
-
-        .continue-btn:active {
-            transform: translateZ(0) scale(0.98);
-        }
+        /* Removed hover/active animations for continue button */
 
         .divider {
             position: relative;
@@ -439,9 +424,9 @@
 
     <!-- Sign in Form -->
     <div class="auth-container">
-        <h1 class="auth-title">Sign in</h1>
+        <h1 class="auth-title" id="authTitle">Sign in</h1>
         
-        <form id="loginForm" method="POST" action="{{ route('login') }}" novalidate>
+        <form id="loginForm" method="POST" action="{{ route('login.email') }}" novalidate>
             @csrf
             
             <div class="form-group">
@@ -449,10 +434,10 @@
                 <input type="email" name="email" class="form-input" placeholder="Your email address" value="{{ old('email') }}" required>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="passwordGroup" style="display: none;">
                 <label class="form-label">Password</label>
                 <div class="password-input-container">
-                    <input type="password" name="password" class="form-input" placeholder="Your password" required>
+                    <input type="password" name="password" class="form-input" placeholder="Create a strong password">
                     <button type="button" class="password-toggle" id="passwordToggle">
                         <!-- Open Eye Icon (visible when password is hidden) -->
                         <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -500,8 +485,10 @@
         </div>
 
         <div class="forgot-link">
-            <a href="{{ route('password.request') }}">Forgot Password?</a>
+            <a href="{{ route('password.request') }}">Forgot your password?</a>
         </div>
+
+        
 
         <div class="terms">
             <a href="#">Terms of Service and Privacy Policy</a>
@@ -530,7 +517,8 @@
         });
 
         // Password toggle functionality
-        document.getElementById('passwordToggle').addEventListener('click', function() {
+        const passwordToggleEl = document.getElementById('passwordToggle');
+        if (passwordToggleEl) passwordToggleEl.addEventListener('click', function() {
             const passwordInput = document.querySelector('input[name="password"]');
             const toggleButton = this;
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -564,63 +552,22 @@
         }
 
         // Form validation
-        function validateLoginForm() {
-            const email = document.querySelector('input[name="email"]').value;
-            const password = document.querySelector('input[name="password"]').value;
-            
-            if (!email || !password) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Error',
-                    text: 'Please fill in all fields.',
-                    confirmButtonColor: '#9333EA'
-                });
-                return false;
-            }
-            
-            // Email validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid Email',
-                    text: 'Please enter a valid email address.',
-                    confirmButtonColor: '#9333EA'
-                });
-                return false;
-            }
-            
-            if (password.length < 8) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid Password',
-                    text: 'Password must be at least 8 characters long.',
-                    confirmButtonColor: '#9333EA'
-                });
-                return false;
-            }
-            
-            return true;
-        }
+        function validateLoginForm() { return true; }
 
-        // Form submission with validation, loading state, and CSRF token refresh
+        // Form submission with loading state and CSRF token refresh
         document.getElementById('loginForm').addEventListener('submit', function(e) {
-            // Prevent default submission temporarily
-            e.preventDefault();
-            
-            // Validate form first
-            if (!validateLoginForm()) {
-                return;
-            }
-            
-            // Show loading state
+            // Show loading spinner
             const btn = document.getElementById('loginBtn');
             const loading = document.getElementById('loading');
             const btnText = document.getElementById('btnText');
             
+            // Hide text and show loading spinner
             btnText.style.display = 'none';
             loading.style.display = 'inline-block';
             btn.disabled = true;
+            
+            // Prevent default submission temporarily
+            e.preventDefault();
             
             // Get fresh CSRF token before submission
             fetch('/csrf-token', {
@@ -628,15 +575,9 @@
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
-                    'Cache-Control': 'no-cache'
                 }
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.csrf_token) {
                     // Update the CSRF token in the form
@@ -650,23 +591,14 @@
                     // Now submit the form with the fresh token
                     this.submit();
                 } else {
-                    throw new Error('No CSRF token received');
+                    // If no token received, submit anyway (fallback)
+                    this.submit();
                 }
             })
             .catch(error => {
                 console.log('CSRF token refresh failed:', error);
-                // Reset button state
-                btnText.style.display = 'inline-block';
-                loading.style.display = 'none';
-                btn.disabled = false;
-                
-                // Show error and try submitting anyway
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Token Refresh Failed',
-                    text: 'Please try submitting again.',
-                    confirmButtonColor: '#9333EA'
-                });
+                // If refresh fails, submit anyway (fallback)
+                this.submit();
             });
         });
 
@@ -728,7 +660,8 @@
         // Refresh CSRF token every 5 minutes
         setInterval(refreshCsrfToken, 300000);
 
-    </script>
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Reset Password</title>
+    <title>Enter Verification Code</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -77,22 +77,27 @@
         }
 
         .auth-title {
-            font-size: 32px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 600;
             color: #FFFFFF;
             text-align: center;
             margin-bottom: 16px;
         }
 
-        .auth-subtitle {
-            font-size: 16px;
-            color: #9CA3AF;
+        .auth-message {
+            font-size: 14px;
+            color: #FFFFFF;
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 32px;
+        }
+
+        .email-address {
+            font-weight: 600;
+            color: #FFFFFF;
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 32px;
         }
 
         .form-label {
@@ -103,44 +108,22 @@
             margin-bottom: 8px;
         }
 
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #404040;
-            border-radius: 8px;
-            background: #2a2a2a;
-            font-size: 16px;
-            color: #FFFFFF;
-            transition: all 0.3s ease;
-            outline: none;
-        }
-
-        .form-input:focus {
-            border-color: #EC4899;
-            background: #333333;
-            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
-        }
-
-        .form-input::placeholder {
-            color: #9CA3AF;
-        }
-
         .code-inputs {
             display: flex;
             gap: 12px;
             justify-content: center;
-            margin: 24px 0;
+            margin-bottom: 24px;
         }
 
         .code-input {
             width: 48px;
             height: 48px;
-            border: 1px solid #404040;
+            border: 2px solid #404040;
             border-radius: 8px;
             background: #2a2a2a;
-            font-size: 20px;
-            font-weight: 600;
             color: #FFFFFF;
+            font-size: 18px;
+            font-weight: 600;
             text-align: center;
             transition: all 0.3s ease;
             outline: none;
@@ -156,25 +139,31 @@
             border-color: #9BD3DD;
             background: #333333;
         }
-        /* No hover styles for inputs */
 
-
-        .continue-btn {
-            width: 100%;
-            padding: 16px;
-            background: #FFFFFF;
-            color: #000000;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .resend-section {
+            text-align: center;
             margin-bottom: 24px;
         }
 
-        .continue-btn:hover {
-            background: #F3F4F6;
+        .resend-section p {
+            color: #9CA3AF;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .resend-section a {
+            color: #ffffff;
+            text-decoration: underline;
+            font-size: 14px;
+        }
+
+        .resend-section a:hover {
+            text-decoration: underline;
+        }
+
+        .resend-section a.disabled {
+            color: #666666;
+            cursor: not-allowed;
         }
 
         .auth-link {
@@ -185,7 +174,7 @@
         }
 
         .auth-link a {
-            color: #9CA3AF;
+            color: #FFFFFF;
             text-decoration: none;
             font-weight: 600;
         }
@@ -194,6 +183,32 @@
             text-decoration: underline;
         }
 
+        .back-link {
+            text-align: center;
+        }
+
+        .back-link a {
+            color: #9CA3AF;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .developer-credit {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #404040;
+        }
+
+        .developer-credit p {
+            color: #FFFFFF;
+            font-size: 12px;
+            margin: 0;
+        }
 
         /* Responsive Design */
         @media (max-width: 480px) {
@@ -205,6 +220,16 @@
             .auth-title {
                 font-size: 28px;
                 margin-bottom: 12px;
+            }
+
+            .code-inputs {
+                gap: 8px;
+            }
+
+            .code-input {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
             }
         }
 
@@ -224,33 +249,26 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .resend-section a {
-            color: #FFFFFF;
-            text-decoration: underline;
-            font-size: 14px;
-        }
-
-        .resend-section a:hover {
-            text-decoration: underline;
-        }
-
-        .resend-section a.disabled {
-            color: #666666;
-            cursor: not-allowed;
-        }
     </style>
 </head>
 <body>
+    @php($loginEmail = session('login_email'))
+    @if(!$loginEmail)
+        <script>window.location.href = '{{ route('login') }}';</script>
+    @endif
+    @php($masked = $loginEmail ? preg_replace('/(^.).+(@.*$)/', '$1***$2', $loginEmail) : '')
+    @php($display = $masked)
 
-    <!-- Reset Password Form -->
+    <!-- Verification Code Form -->
     <div class="auth-container">
-        <h1 class="auth-title">Reset Password</h1>
-        <p class="auth-subtitle" style="white-space: nowrap;">Enter the code sent to your email address</p>
+        <h1 class="auth-title">Verify your email</h1>
         
-        <form id="resetForm" method="POST" action="{{ route('password.verify.code') }}">
+        <div class="auth-message">
+            <p style="color:#9CA3AF; font-size:14px;">Code sent to <span class="email-address">{{ $display }}</span></p>
+        </div>
+
+        <form method="POST" action="{{ route('login.verify.code.submit') }}" id="verificationForm">
             @csrf
-            
             <div class="code-inputs">
                 <input type="text" name="code1" class="code-input" maxlength="1" pattern="[0-9]" required>
                 <input type="text" name="code2" class="code-input" maxlength="1" pattern="[0-9]" required>
@@ -259,19 +277,17 @@
                 <input type="text" name="code5" class="code-input" maxlength="1" pattern="[0-9]" required>
                 <input type="text" name="code6" class="code-input" maxlength="1" pattern="[0-9]" required>
             </div>
-            
-            <input type="hidden" name="code" id="fullCode">
-
+            <input type="hidden" name="code" id="verificationCode">
         </form>
 
-        <div class="resend-section" style="text-align:center; margin-top:8px; margin-bottom:16px;">
-            <p style="color:#9CA3AF; font-size:14px;">
-                Didn't receive the code?
-                <a href="#" id="resendLink">Resend</a> <span id="countdown" style="color:#9CA3AF">(30)</span>
+        <div class="resend-section">
+            <p>
+                Didn't receive a code?
+                <a href="#" id="resendLink">Resend</a><span id="countdown">(30)</span>
             </p>
         </div>
 
-        <div class="auth-link">
+        <div class="back-link">
             <a href="{{ route('login') }}">Go back</a>
         </div>
     </div>
@@ -292,7 +308,8 @@
 
         // Code input functionality
         const codeInputs = document.querySelectorAll('.code-input');
-        const fullCodeInput = document.getElementById('fullCode');
+        const verificationCode = document.getElementById('verificationCode');
+        
         const resendLink = document.getElementById('resendLink');
         const countdownSpan = document.getElementById('countdown');
         let countdown = 30;
@@ -315,35 +332,19 @@
                 }
                 
                 // Update hidden input with full code
-                updateFullCode();
+                updateVerificationCode();
                 
                 // Auto-submit when 6th digit is entered
                 if (index === 5 && this.value.length === 1) {
                     setTimeout(() => {
-                        const fullCode = fullCodeInput.value;
+                        const fullCode = verificationCode.value;
                         if (fullCode.length === 6) {
-                            // Disable all inputs to prevent further typing
+                            // Disable inputs and show button spinner
                             codeInputs.forEach(input => {
                                 input.disabled = true;
                                 input.style.opacity = '0.6';
                             });
-                            
-                            // Show loading state
-                            Swal.fire({
-                                title: 'Verifying Code...',
-                                text: 'Please wait while we verify your code.',
-                                allowOutsideClick: false,
-                                showConfirmButton: false,
-                                willOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            
-                            // Add a small delay to ensure the loading state is visible
-                            setTimeout(() => {
-                                console.log('Submitting form with code:', fullCode);
-                                document.getElementById('resetForm').submit();
-                            }, 500);
+                            document.getElementById('verificationForm').submit();
                         }
                     }, 100);
                 }
@@ -369,48 +370,46 @@
                     }
                 });
                 
-                updateFullCode();
+                updateVerificationCode();
                 
                 // Auto-submit when 6 digits are pasted
                 if (numbers.length >= 6) {
                     setTimeout(() => {
-                        const fullCode = fullCodeInput.value;
+                        const fullCode = verificationCode.value;
                         if (fullCode.length === 6) {
-                            // Disable all inputs to prevent further typing
                             codeInputs.forEach(input => {
                                 input.disabled = true;
                                 input.style.opacity = '0.6';
                             });
-                            
-                            // Show loading state
-                            Swal.fire({
-                                title: 'Verifying Code...',
-                                text: 'Please wait while we verify your code.',
-                                allowOutsideClick: false,
-                                showConfirmButton: false,
-                                willOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            
-                            // Add a small delay to ensure the loading state is visible
-                            setTimeout(() => {
-                                console.log('Submitting form with code:', fullCode);
-                                document.getElementById('resetForm').submit();
-                            }, 500);
+                            document.getElementById('verificationForm').submit();
                         }
                     }, 100);
                 }
             });
         });
 
-        function updateFullCode() {
+        function updateVerificationCode() {
             const code = Array.from(codeInputs).map(input => input.value).join('');
-            fullCodeInput.value = code;
+            verificationCode.value = code;
         }
 
+        // Form validation
+        document.getElementById('verificationForm').addEventListener('submit', function(e) {
+            const code = verificationCode.value;
+            
+            if (code.length !== 6) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Code',
+                    text: 'Please enter a complete 6-digit code.',
+                    confirmButtonColor: '#9333EA'
+                });
+                return;
+            }
+        });
 
-        // Resend with countdown
+        // Resend logic with countdown
         function updateCountdown() {
             if (!countdownSpan) return;
             countdownSpan.textContent = `(${countdown})`;
@@ -422,28 +421,56 @@
 
         function handleResend(e) {
             e.preventDefault();
-            if (countdown > 0) return;
+            if (countdown > 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Please wait',
+                    text: `A new code will be sent in ${countdown} seconds`,
+                    confirmButtonColor: '#9333EA'
+                });
+                return;
+            }
+
             countdown = 30;
             updateCountdown();
 
             const formData = new FormData();
-            formData.append('email', '{{ session('reset_user_email') ?? '' }}');
+            formData.append('email', '{{ $loginEmail }}');
             formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
 
-            fetch('{{ route("email.resend") }}', {
+            fetch('{{ route("login.send.code") }}', {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
                 body: formData
             })
-            .then(r => r.json())
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Toast.fire({ icon: 'success', title: 'A new code was sent.' });
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Code Sent!',
+                        text: 'Please wait, a new code sent.',
+                        confirmButtonColor: '#9333EA'
+                    });
                 } else {
-                    Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to resend code.', confirmButtonColor: '#9333EA' });
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to resend code.',
+                        confirmButtonColor: '#9333EA'
+                    });
                 }
             })
             .catch(() => {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong. Please try again.', confirmButtonColor: '#9333EA' });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong. Please try again.',
+                    confirmButtonColor: '#9333EA'
+                });
             });
         }
 
@@ -451,8 +478,6 @@
             resendLink.addEventListener('click', handleResend);
             updateCountdown();
         }
-
-
 
         // CSRF Token Refresh
         function refreshCsrfToken() {
@@ -481,60 +506,8 @@
         // Refresh CSRF token every 5 minutes
         setInterval(refreshCsrfToken, 300000);
 
-        // Form validation with CSRF token refresh
-        document.getElementById('resetForm').addEventListener('submit', function(e) {
-            const code = fullCodeInput.value;
-            
-            if (code.length !== 6) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid Code',
-                    text: 'Please enter a complete 6-digit code.',
-                    confirmButtonColor: '#9333EA'
-                });
-                return;
-            }
-            
-            // Prevent default submission temporarily
-            e.preventDefault();
-            
-            // Get fresh CSRF token before submission
-            fetch('/csrf-token', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.csrf_token) {
-                    // Update the CSRF token in the form
-                    const csrfInput = document.querySelector('input[name="_token"]');
-                    if (csrfInput) {
-                        csrfInput.value = data.csrf_token;
-                    }
-                    // Update meta tag
-                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
-                    
-                    // Now submit the form with the fresh token
-                    this.submit();
-                } else {
-                    // If no token received, submit anyway (fallback)
-                    this.submit();
-                }
-            })
-            .catch(error => {
-                console.log('CSRF token refresh failed:', error);
-                // If refresh fails, submit anyway (fallback)
-                this.submit();
-            });
-        });
-
         // Display validation errors
         @if ($errors->any())
-            console.log('Validation errors detected:', '{{ $errors->first() }}');
             Swal.fire({
                 icon: 'error',
                 title: 'Invalid Code',
@@ -548,14 +521,14 @@
                     input.value = '';
                     input.classList.remove('filled');
                 });
-                fullCodeInput.value = '';
+                verificationCode.value = '';
                 codeInputs[0].focus();
             });
         @endif
 
-        // Display session error messages
+
+        // Display error messages
         @if (session('error'))
-            console.log('Session error detected:', '{{ session('error') }}');
             Swal.fire({
                 icon: 'error',
                 title: 'Invalid Code',
@@ -569,19 +542,11 @@
                     input.value = '';
                     input.classList.remove('filled');
                 });
-                fullCodeInput.value = '';
+                verificationCode.value = '';
                 codeInputs[0].focus();
             });
         @endif
-
-        // Display success messages
-        @if (session('success'))
-            Toast.fire({
-                icon: 'success',
-                title: '{{ session('success') }}'
-            });
-        @endif
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

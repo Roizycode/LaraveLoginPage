@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Create Password</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -118,16 +118,13 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .form-input:focus {
+        .form-input:focus-visible {
             border-color: #9BD3DD;
             background: #333333;
             box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.2);
         }
 
-        .form-input:hover {
-            border-color: #9BD3DD;
-            box-shadow: 0 0 0 2px rgba(155, 211, 221, 0.1);
-        }
+        /* Remove hover color changes for inputs */
 
         .form-input:active {
             border-color: #9BD3DD;
@@ -142,6 +139,12 @@
 
         .password-input-container {
             position: relative;
+        }
+
+        .helper-text {
+            margin-top: 8px;
+            color: #9CA3AF;
+            font-size: 12px;
         }
 
         .password-toggle {
@@ -269,7 +272,7 @@
 
         .resend-section a {
             color: #FFFFFF;
-            text-decoration: none;
+            text-decoration: underline;
             font-size: 14px;
         }
 
@@ -282,22 +285,7 @@
             cursor: not-allowed;
         }
 
-        .error-message {
-            color: #ef4444;
-            font-size: 12px;
-            margin-top: 4px;
-            display: none;
-        }
-
-        .form-input.error {
-            border-color: #ef4444;
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
-        }
-
-        .form-input.success {
-            border-color: #9BD3DD;
-            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.2);
-        }
+        /* Removed red error styling during typing */
 
         /* Prevent background zoom/shift on input focus */
         @media screen and (max-width: 768px) {
@@ -374,29 +362,23 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Confirm Password</label>
-                <div class="password-input-container">
-                    <input type="password" name="password_confirmation" id="passwordConfirmation" class="form-input" placeholder="Confirm your password" required>
-                    <button type="button" class="password-toggle" id="confirmPasswordToggle">
-                        <!-- Open Eye Icon (visible when password is hidden) -->
-                        <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" fill="none"/>
-                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-                        </svg>
-                        <!-- Closed Eye Icon (visible when password is shown) -->
-                        <svg class="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" stroke-width="2" fill="none"/>
-                            <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="error-message" id="passwordConfirmationError">Passwords do not match</div>
-            </div>
-
             <button type="submit" class="continue-btn" id="passwordBtn">
                 <span class="loading" id="loading"></span>
-                <span id="btnText">Create Account</span>
+                <span id="btnText">Continue</span>
+            </button>
+            
+            <div class="divider"><span>OR</span></div>
+            
+            <button type="button" class="continue-btn" id="emailCodeBtn" onclick="sendEmailCode()">
+                <span class="loading" id="emailLoading"></span>
+                <span id="emailBtnText">
+                    <!-- Email icon -->
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <path d="m22 7-10 5L2 7"></path>
+                    </svg>
+                    Continue with email code
+                </span>
             </button>
         </form>
 
@@ -405,7 +387,7 @@
 
 
         <div class="back-link">
-            <a href="{{ route('register') }}">Go back to registration</a>
+            <a href="{{ route('register') }}">Go back</a>
         </div>
 
     </div>
@@ -439,78 +421,15 @@
             }
         });
 
-        document.getElementById('confirmPasswordToggle').addEventListener('click', function() {
-            const passwordInput = document.querySelector('input[name="password_confirmation"]');
-            const toggleButton = this;
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            
-            // Toggle the eye icon classes
-            if (type === 'text') {
-                toggleButton.classList.add('show-password');
-            } else {
-                toggleButton.classList.remove('show-password');
-            }
-        });
-
         // Password validation
         const passwordInput = document.getElementById('password');
-        const passwordConfirmationInput = document.getElementById('passwordConfirmation');
-        const passwordError = document.getElementById('passwordError');
-        const passwordConfirmationError = document.getElementById('passwordConfirmationError');
 
         function validatePassword() {
             const password = passwordInput.value;
             const isValid = password.length >= 8;
-            
-            if (password.length > 0) {
-                if (isValid) {
-                    passwordInput.classList.remove('error');
-                    passwordInput.classList.add('success');
-                    passwordError.style.display = 'none';
-                } else {
-                    passwordInput.classList.remove('success');
-                    passwordInput.classList.add('error');
-                    passwordError.style.display = 'block';
-                }
-            } else {
-                passwordInput.classList.remove('error', 'success');
-                passwordError.style.display = 'none';
-            }
-            
+            // No live styling changes while typing
             return isValid;
         }
-
-        function validatePasswordConfirmation() {
-            const password = passwordInput.value;
-            const confirmation = passwordConfirmationInput.value;
-            const isValid = confirmation === password && confirmation.length > 0;
-            
-            if (confirmation.length > 0) {
-                if (isValid) {
-                    passwordConfirmationInput.classList.remove('error');
-                    passwordConfirmationInput.classList.add('success');
-                    passwordConfirmationError.style.display = 'none';
-                } else {
-                    passwordConfirmationInput.classList.remove('success');
-                    passwordConfirmationInput.classList.add('error');
-                    passwordConfirmationError.style.display = 'block';
-                }
-            } else {
-                passwordConfirmationInput.classList.remove('error', 'success');
-                passwordConfirmationError.style.display = 'none';
-            }
-            
-            return isValid;
-        }
-
-        passwordInput.addEventListener('input', function() {
-            validatePassword();
-            validatePasswordConfirmation(); // Re-validate confirmation when password changes
-        });
-
-
-        passwordConfirmationInput.addEventListener('input', validatePasswordConfirmation);
 
         // CSRF Token Refresh
         function refreshCsrfToken() {
@@ -542,18 +461,26 @@
         // Form submission with validation and CSRF token refresh
         document.getElementById('passwordForm').addEventListener('submit', function(e) {
             const passwordValid = validatePassword();
-            const confirmationValid = validatePasswordConfirmation();
-            
-            if (!passwordValid || !confirmationValid) {
+            if (!passwordValid) {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'error',
                     title: 'Validation Error',
-                    text: 'Please fix the password validation errors before submitting.',
+                    text: 'Password must be at least 8 characters.',
                     confirmButtonColor: '#9333EA'
                 });
                 return;
             }
+            
+            // Show loading spinner
+            const btn = document.getElementById('passwordBtn');
+            const loading = document.getElementById('loading');
+            const btnText = document.getElementById('btnText');
+            
+            // Hide text and show loading spinner in center
+            btnText.style.display = 'none';
+            loading.style.display = 'inline-block';
+            btn.disabled = true;
             
             // Prevent default submission temporarily
             e.preventDefault();
@@ -695,6 +622,123 @@
 
         // Start countdown on page load
         updateCountdown();
+
+        // Send email code functionality
+        function sendEmailCode() {
+            const emailCodeBtn = document.getElementById('emailCodeBtn');
+            const emailLoading = document.getElementById('emailLoading');
+            const emailBtnText = document.getElementById('emailBtnText');
+            
+            // Show loading spinner (same pattern as continue button)
+            emailBtnText.style.display = 'none';
+            emailLoading.style.display = 'inline-block';
+            emailCodeBtn.disabled = true;
+
+            // Get user email from session or auth
+            const userEmail = '{{ Auth::user()->email ?? session("user_email") ?? "" }}';
+            
+            // Debug: Log the email being used
+            console.log('Using email for verification:', userEmail);
+            console.log('Auth user email:', '{{ Auth::user()->email ?? "null" }}');
+            console.log('Session email:', '{{ session("user_email") ?? "null" }}');
+            
+            // Show user what email is being used
+            if (userEmail) {
+                console.log('Sending verification code to:', userEmail);
+            }
+            
+            if (!userEmail) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No email found. Please try registering again.',
+                    confirmButtonColor: '#9333EA'
+                });
+                // Restore button state
+                emailBtnText.style.display = 'inline';
+                emailLoading.style.display = 'none';
+                emailCodeBtn.disabled = false;
+                return;
+            }
+
+            // First refresh CSRF token
+            fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.csrf_token) {
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.csrf_token);
+                }
+                
+                // Now send the email code request
+                const formData = new FormData();
+                formData.append('email', userEmail);
+                formData.append('_token', data.csrf_token || document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+                return fetch('{{ route("email.send.registration.code") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    },
+                    body: formData
+                });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Redirect to email verification page without showing modal
+                    window.location.href = '{{ route("email.verification.required") }}';
+                } else {
+                    // Handle specific error cases
+                    if (data.message && data.message.includes('Email already verified')) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Account Already Exists',
+                            text: 'An account with this email already exists and is verified. Please log in instead of registering.',
+                            confirmButtonColor: '#9333EA'
+                        }).then(() => {
+                            // Redirect to login page
+                            window.location.href = '{{ route("login") }}';
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'Failed to send verification code.',
+                            confirmButtonColor: '#9333EA'
+                        });
+                        // Restore button state
+                        emailBtnText.style.display = 'inline';
+                        emailLoading.style.display = 'none';
+                        emailCodeBtn.disabled = false;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error sending email code:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong. Please try again.',
+                    confirmButtonColor: '#9333EA'
+                });
+                // Restore button state
+                emailBtnText.style.display = 'inline';
+                emailLoading.style.display = 'none';
+                emailCodeBtn.disabled = false;
+            });
+        }
     </script>
 </body>
 </html>

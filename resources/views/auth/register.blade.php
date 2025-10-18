@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sign up</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="/people.png">
     <style>
@@ -151,21 +152,13 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .form-input:focus {
+        .form-input:focus-visible {
             border-color: #9BD3DD;
             background: #333333;
             box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.2);
         }
 
-        .form-input:hover {
-            border-color: #9BD3DD;
-            box-shadow: 0 0 0 2px rgba(155, 211, 221, 0.1);
-        }
-
-        .form-input:active {
-            border-color: #9BD3DD;
-            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.3);
-        }
+        /* No hover/active color changes; highlight only when focused */
 
         .form-input::placeholder {
             color: #9CA3AF;
@@ -228,7 +221,7 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
+            transition: none; /* hover/active animations disabled */
             margin-bottom: 24px;
             display: flex;
             align-items: center;
@@ -237,15 +230,7 @@
             backface-visibility: hidden;
             will-change: background-color;
         }
-
-        .continue-btn:hover {
-            background: #F3F4F6;
-            transform: translateZ(0) scale(1.02);
-        }
-
-        .continue-btn:active {
-            transform: translateZ(0) scale(0.98);
-        }
+        /* Removed hover/active animations for continue button */
 
         .divider {
             position: relative;
@@ -661,6 +646,7 @@
                 this.submit();
             });
         });
-    </script>
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

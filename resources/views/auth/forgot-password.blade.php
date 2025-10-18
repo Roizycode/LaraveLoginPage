@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Forgot Password</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="/people.png">
     <style>
@@ -88,6 +89,7 @@
             color: #9CA3AF;
             text-align: center;
             margin-bottom: 40px;
+            white-space: nowrap; /* keep as straight one line */
         }
 
         .form-group {
@@ -114,10 +116,17 @@
             outline: none;
         }
 
-        .form-input:focus {
-            border-color: #EC4899;
+        .form-input:focus-visible {
+            border-color: #9BD3DD;
             background: #333333;
-            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.25);
+        }
+
+        /* No hover styling on inputs to avoid color change on mouseover */
+
+        .form-input:active {
+            border-color: #9BD3DD;
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.3);
         }
 
         .form-input::placeholder {
@@ -236,12 +245,12 @@
 
             <button type="submit" class="continue-btn" id="resetBtn">
                 <span class="loading" id="loading"></span>
-                <span id="btnText">Send Reset Link</span>
+                <span id="btnText">Continue</span>
             </button>
         </form>
 
         <div class="auth-link">
-            <a href="{{ route('login') }}">Back to Login</a>
+            <a href="{{ route('login') }}">Go back</a>
         </div>
     </div>
 
@@ -288,6 +297,16 @@
 
         // Form submission with loading state and CSRF token refresh
         document.getElementById('forgotForm').addEventListener('submit', function(e) {
+            // Show loading spinner
+            const btn = document.getElementById('resetBtn');
+            const loading = document.getElementById('loading');
+            const btnText = document.getElementById('btnText');
+            
+            // Hide text and show loading spinner
+            btnText.style.display = 'none';
+            loading.style.display = 'inline-block';
+            btn.disabled = true;
+            
             // Prevent default submission temporarily
             e.preventDefault();
             
@@ -336,19 +355,11 @@
 
         // Display success messages
         @if (session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Code Sent!',
-                text: '{{ session('success') }}',
-                confirmButtonColor: '#9333EA',
-                confirmButtonText: 'Continue to Reset'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = '{{ route('password.reset.form') }}';
-                }
-            });
+            // Redirect directly to reset form without showing modal
+            window.location.href = '{{ route('password.reset.form') }}';
         @endif
-    </script>
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 

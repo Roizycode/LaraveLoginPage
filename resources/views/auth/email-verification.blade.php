@@ -6,6 +6,7 @@
     <title>Email Verification</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="/people.png">
     <style>
@@ -124,14 +125,21 @@
             outline: none;
         }
 
-        .code-input:focus {
-            border-color: #EC4899;
+        .code-input:focus-visible {
+            border-color: #9BD3DD;
             background: #333333;
-            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.25);
+        }
+
+        /* Remove hover color on inputs */
+
+        .code-input:active {
+            border-color: #9BD3DD;
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.3);
         }
 
         .code-input.filled {
-            border-color: #EC4899;
+            border-color: #9BD3DD;
             background: #333333;
         }
 
@@ -142,7 +150,7 @@
 
         .resend-section a {
             color: #FFFFFF;
-            text-decoration: none;
+            text-decoration: underline;
             font-size: 14px;
         }
 
@@ -181,6 +189,8 @@
             font-size: 12px;
             margin: 0;
         }
+
+        /* spinner/button styles removed */
 
         .btn {
             padding: 12px 24px;
@@ -223,8 +233,11 @@
         
         <h1 class="auth-title">Verify your email</h1>
         
+        @php($userEmail = Auth::user()->email ?? session('user_email') ?? 'your email address')
+        @php($maskedEmail = $userEmail !== 'your email address' ? preg_replace('/(^.).+(@.*$)/', '$1***$2', $userEmail) : $userEmail)
+        
         <div class="auth-message">
-            <p>Enter the code sent to {{ Auth::user()->email ?? 'your email address' }}</p>
+            <p>Code sent to <span class="email-address">{{ $maskedEmail }}</span></p>
         </div>
 
         <form id="verificationForm" method="POST" action="{{ route('email.verify') }}">
@@ -238,29 +251,30 @@
                 <input type="text" name="code6" class="code-input" maxlength="1" pattern="[0-9]" required>
             </div>
             <input type="hidden" name="code" id="verificationCode">
+
+            
         </form>
 
         <div class="resend-section">
+            <p style="color:#9CA3AF; font-size:14px;">
+                Didn't receive a code?
+                <a href="#" id="resendLink">Resend</a> <span id="countdown" style="color:#9CA3AF">(30)</span>
+            </p>
+        </div>
+
+        <div class="back-link">
+            <a href="{{ route('register') }}">Go back</a>
         </div>
     </div>
 
     <script>
-        // SweetAlert2 configuration
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer)
-                toast.addEventListener('mouseleave', Swal.resumeTimer)
-            }
-        });
-
         // Code input functionality
         const codeInputs = document.querySelectorAll('.code-input');
         const verificationCode = document.getElementById('verificationCode');
+        
+        const resendLink = document.getElementById('resendLink');
+        const countdownSpan = document.getElementById('countdown');
+        let countdown = 30;
 
         codeInputs.forEach((input, index) => {
             input.addEventListener('input', function(e) {
@@ -287,28 +301,12 @@
                     setTimeout(() => {
                         const fullCode = verificationCode.value;
                         if (fullCode.length === 6) {
-                            // Disable all inputs to prevent further typing
+                            // Disable inputs and show button spinner
                             codeInputs.forEach(input => {
                                 input.disabled = true;
                                 input.style.opacity = '0.6';
                             });
-                            
-                            // Show loading state
-                            Swal.fire({
-                                title: 'Verifying Code...',
-                                text: 'Please wait while we verify your code.',
-                                allowOutsideClick: false,
-                                showConfirmButton: false,
-                                willOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            
-                            // Add a small delay to ensure the loading state is visible
-                            setTimeout(() => {
-                                console.log('Submitting form with code:', fullCode);
-                                document.getElementById('verificationForm').submit();
-                            }, 500);
+                            document.getElementById('verificationForm').submit();
                         }
                     }, 100);
                 }
@@ -341,28 +339,11 @@
                     setTimeout(() => {
                         const fullCode = verificationCode.value;
                         if (fullCode.length === 6) {
-                            // Disable all inputs to prevent further typing
                             codeInputs.forEach(input => {
                                 input.disabled = true;
                                 input.style.opacity = '0.6';
                             });
-                            
-                            // Show loading state
-                            Swal.fire({
-                                title: 'Verifying Code...',
-                                text: 'Please wait while we verify your code.',
-                                allowOutsideClick: false,
-                                showConfirmButton: false,
-                                willOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                            
-                            // Add a small delay to ensure the loading state is visible
-                            setTimeout(() => {
-                                console.log('Submitting form with code:', fullCode);
-                                document.getElementById('verificationForm').submit();
-                            }, 500);
+                            document.getElementById('verificationForm').submit();
                         }
                     }, 100);
                 }
@@ -372,6 +353,7 @@
         function updateVerificationCode() {
             const code = Array.from(codeInputs).map(input => input.value).join('');
             verificationCode.value = code;
+            
         }
 
         // Form validation
@@ -388,7 +370,75 @@
                 });
                 return;
             }
+            
         });
+        
+
+        // Resend logic with countdown
+        function updateCountdown() {
+            if (!countdownSpan) return;
+            countdownSpan.textContent = `(${countdown})`;
+            if (countdown > 0) {
+                countdown--;
+                setTimeout(updateCountdown, 1000);
+            }
+        }
+
+        function handleResend(e) {
+            e.preventDefault();
+            if (countdown > 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Please wait',
+                    text: `A new code will be sent in ${countdown} seconds`,
+                    confirmButtonColor: '#9333EA'
+                });
+                return;
+            }
+
+            countdown = 30;
+            updateCountdown();
+
+            const formData = new FormData();
+            formData.append('email', '{{ $userEmail }}');
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+            fetch('{{ route("email.resend") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Code Sent!',
+                        text: 'A new verification code has been sent to your email.',
+                        confirmButtonColor: '#9333EA'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to resend code.',
+                        confirmButtonColor: '#9333EA'
+                    });
+                }
+            })
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong. Please try again.',
+                    confirmButtonColor: '#9333EA'
+                });
+            });
+        }
+
+        if (resendLink) {
+            resendLink.addEventListener('click', handleResend);
+            updateCountdown();
+        }
 
         // Display validation errors
         @if ($errors->any())
@@ -408,6 +458,7 @@
                 });
                 verificationCode.value = '';
                 codeInputs[0].focus();
+                
             });
         @endif
 
@@ -429,6 +480,7 @@
                 });
                 verificationCode.value = '';
                 codeInputs[0].focus();
+                
             });
         @endif
 
@@ -442,6 +494,7 @@
             });
         @endif
 
-    </script>
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

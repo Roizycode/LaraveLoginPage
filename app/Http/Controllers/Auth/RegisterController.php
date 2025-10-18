@@ -63,7 +63,7 @@ class RegisterController extends Controller
     public function completeRegistration(Request $request)
     {
         $request->validate([
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8'],
         ]);
 
         // Get user data from session
@@ -316,6 +316,8 @@ class RegisterController extends Controller
     private function sendVerificationCodeEmail($user, $code)
     {
         try {
+            \Log::info('Attempting to send verification email to: ' . $user->email . ' with code: ' . $code);
+            
             Mail::send('emails.verify-code', [
                 'user' => $user,
                 'verificationCode' => $code
@@ -323,9 +325,122 @@ class RegisterController extends Controller
                 $message->to($user->email, $user->name)
                         ->subject('Your Verification Code');
             });
+            
+            \Log::info('Verification email sent successfully to: ' . $user->email);
         } catch (\Exception $e) {
             \Log::error('Email sending error: ' . $e->getMessage());
+            \Log::error('Email sending error trace: ' . $e->getTraceAsString());
             throw $e;
+        }
+    }
+
+    public function sendRegistrationVerificationCode(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => ['required', 'email']
+            ]);
+
+            $email = $request->email;
+            
+            \Log::info('SendRegistrationVerificationCode called for email: ' . $email);
+            
+            // Check if user exists in database
+            $user = User::where('email', $email)->first();
+            
+            if ($user) {
+                \Log::info('User exists in database: ' . $user->email . ', verified: ' . ($user->email_verified_at ? 'yes' : 'no'));
+                
+                // User exists in database
+                if ($user->email_verified_at) {
+                    \Log::info('User is already verified, redirecting to login');
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'An account with this email already exists and is verified. Please log in instead of registering.'
+                    ]);
+                }
+
+                // Generate a new verification code for existing unverified user
+                $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $user->update(['email_verification_token' => $verificationCode]);
+
+                \Log::info('Sending verification code to existing unverified user: ' . $user->email);
+
+                // Send verification code email
+                try {
+                    $this->sendVerificationCodeEmail($user, $verificationCode);
+                    
+                    // Store user email in session for verification
+                    $request->session()->put('user_email', $user->email);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Verification code sent to your email.'
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send verification email to existing user: ' . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to send verification code. Please try again.'
+                    ]);
+                }
+            } else {
+                \Log::info('User does not exist in database, checking session data');
+                
+                // User doesn't exist in database - they're in the middle of registration
+                // Check if we have their data in session
+                $sessionEmail = session('user_email');
+                $sessionName = session('user_name');
+                
+                \Log::info('Session email: ' . ($sessionEmail ?: 'null') . ', Session name: ' . ($sessionName ?: 'null'));
+                
+                if (!$sessionEmail || $sessionEmail !== $email) {
+                    \Log::info('Session email mismatch or missing');
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No account found with this email. Please register first.'
+                    ]);
+                }
+
+                // Create a temporary user record for email verification
+                $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                
+                \Log::info('Creating temporary user for email verification');
+                
+                $tempUser = User::create([
+                    'name' => $sessionName,
+                    'email' => $email,
+                    'password' => Hash::make('temp_password_' . time()), // Temporary password
+                    'email_verification_token' => $verificationCode,
+                    'email_verified_at' => null,
+                ]);
+
+                // Send verification code email
+                try {
+                    $this->sendVerificationCodeEmail($tempUser, $verificationCode);
+                    
+                    // Store user email in session for verification
+                    $request->session()->put('user_email', $tempUser->email);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Verification code sent to your email.'
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send verification email to temp user: ' . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to send verification code. Please try again.'
+                    ]);
+                }
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Send registration verification code error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong. Please try again.'
+            ]);
         }
     }
 }

@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Create New Password</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="/people.png">
     <style>
@@ -110,10 +111,16 @@
             outline: none;
         }
 
-        .form-input:focus {
-            border-color: #EC4899;
+        .form-input:focus-visible {
+            border-color: #9BD3DD;
             background: #333333;
-            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.25);
+        }
+
+
+        .form-input:active {
+            border-color: #9BD3DD;
+            box-shadow: 0 0 0 3px rgba(155, 211, 221, 0.3);
         }
 
         .form-input::placeholder {
@@ -193,6 +200,7 @@
         .continue-btn:hover {
             background: #F3F4F6;
         }
+        /* Remove input hover effect so styling applies only on focus/active */
 
 
         /* Responsive Design */
@@ -205,6 +213,17 @@
             .auth-title {
                 font-size: 28px;
                 margin-bottom: 32px;
+            }
+
+            /* Ensure input controls are easy to tap on small screens */
+            .form-input {
+                font-size: 16px; /* prevent iOS zoom */
+                padding: 14px 16px;
+            }
+
+            .continue-btn {
+                padding: 14px;
+                font-size: 16px;
             }
         }
 
@@ -457,6 +476,7 @@
                 confirmButtonColor: '#9333EA'
             });
         @endif
-    </script>
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
